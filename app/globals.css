@@ -1,26 +1,184 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --bg-gradient-start: #FFE5EC;
+  --bg-gradient-end: #FFF0F5;
+  --primary-pink: #FFB6C1;
+  --primary-rose: #FF1493;
+  --accent-purple: #DDA0DD;
+  --text-main: #4A1F3D;
+  --text-light: #8B5A7D;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
+  --color-background: var(--bg-gradient-start);
+  --color-foreground: var(--text-main);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg-gradient-start: #2D1B2E;
+    --bg-gradient-end: #1F1421;
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: linear-gradient(135deg, var(--bg-gradient-start) 0%, var(--bg-gradient-end) 100%);
+  background-attachment: fixed;
+  color: var(--text-main);
+  font-family: var(--font-sans), Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* 渐变文字效果 */
+.gradient-text {
+  background: linear-gradient(135deg, var(--primary-rose), var(--accent-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  text-fill-color: transparent;
+}
+
+/* 玻璃态卡片效果 */
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 182, 193, 0.3);
+  box-shadow: 0 8px 32px rgba(255, 105, 180, 0.15);
+  transition: all 0.3s ease;
+}
+
+.glass-card:hover {
+  box-shadow: 0 12px 48px rgba(255, 105, 180, 0.25);
+}
+
+/* 心跳动画 */
+@keyframes heartbeat {
+  0%, 100% { 
+    transform: scale(1); 
+  }
+  25% { 
+    transform: scale(1.15); 
+  }
+  50% { 
+    transform: scale(1); 
+  }
+  75% { 
+    transform: scale(1.1); 
+  }
+}
+
+.heartbeat {
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+/* 平滑滚动 */
+html {
+  scroll-behavior: smooth;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, var(--primary-pink), var(--accent-purple));
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, var(--primary-rose), var(--accent-purple));
+}
+
+/* 响应式字体大小 */
+@media (max-width: 768px) {
+  body {
+    font-size: 14px;
+  }
+}
+
+/* 防止文本选择影响动画 */
+* {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 确保动画性能优化 */
+.will-change-transform {
+  will-change: transform;
+}
+
+.will-change-opacity {
+  will-change: opacity;
+}
+
+/* 翻页动画辅助样式 */
+.flip-container {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+}
+
+.flip-number {
+  backface-visibility: hidden;
+  transform-style: preserve-3d;
+}
+
+/* 输入框浪漫主题样式 */
+.romantic-input {
+  background: rgba(255, 255, 255, 0.8);
+  border: 2px solid rgba(255, 182, 193, 0.4);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  color: var(--text-main);
+}
+
+.romantic-input:focus {
+  outline: none;
+  border-color: var(--primary-rose);
+  box-shadow: 0 0 0 3px rgba(255, 20, 147, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.romantic-input::placeholder {
+  color: var(--text-light);
+  opacity: 0.6;
+}
+
+/* 浪漫按钮样式 */
+.romantic-button {
+  background: linear-gradient(135deg, var(--primary-rose), var(--accent-purple));
+  color: white;
+  border: none;
+  border-radius: 12px;
+  padding: 12px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(255, 20, 147, 0.3);
+}
+
+.romantic-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 20, 147, 0.4);
+}
+
+.romantic-button:active {
+  transform: translateY(0);
+}
+
+.romantic-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
