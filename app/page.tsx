@@ -10,6 +10,7 @@ import CountdownTimer from './components/CountdownTimer'
 import LoveQuotes from './components/LoveQuotes'
 import PhotoGallery from './components/PhotoGallery'
 import MessageBoard from './components/MessageBoard'
+import VisitCounter from './components/VisitCounter'
 
 import { nicknames } from './data/nicknames'
 
@@ -75,6 +76,9 @@ export default function Home() {
             <FaHeart className="text-5xl md:text-7xl text-pink-500" />
           </motion.div>
         </motion.section>
+
+        {/* 访问统计区 */}
+        <VisitCounter />
 
         {/* 倒计时区 */}
         <motion.section 
