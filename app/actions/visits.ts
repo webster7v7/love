@@ -129,6 +129,46 @@ export async function getVisitStatsWithCache(): Promise<VisitStats> {
         total: 0,
       }
     },
-    30000 // 30秒缓存，访问统计更新频繁
+    10000 // 10秒缓存，实时更新需要更短的缓存时间
   )
+}
+
+/**
+ * 获取实时访问统计（无缓存）
+ */
+export async function getRealTimeVisitStats(): Promise<VisitStats> {
+  try {
+    const result = await getVisitStats()
+    
+    if (result.success && result.stats) {
+      return result.stats
+    }
+    
+    return {
+      daily: 0,
+      weekly: 0,
+      monthly: 0,
+      total: 0,
+    }
+  } catch (error) {
+    console.error('Failed to get real-time visit stats:', error)
+    return {
+      daily: 0,
+      weekly: 0,
+      monthly: 0,
+      total: 0,
+    }
+  }
+}
+
+/**
+ * 强制刷新访问统计缓存
+ */
+export async function refreshVisitStatsCache(): Promise<void> {
+  try {
+    const { dataCache } = await import('@/lib/cache')
+    await dataCache.delete('visit-stats')
+  } catch (error) {
+    console.error('Failed to refresh visit stats cache:', error)
+  }
 }

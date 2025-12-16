@@ -11,7 +11,7 @@ import CountdownTimer from './components/CountdownTimer'
 import LoveQuotes from './components/LoveQuotes'
 import PhotoGallery from './components/PhotoGallery'
 import MessageBoard from './components/MessageBoard'
-import VisitCounter from './components/VisitCounter'
+import EnhancedVisitCounter from './components/EnhancedVisitCounter'
 import AdminPanel from './components/AdminPanel'
 
 import { nicknames } from './data/nicknames'
@@ -82,7 +82,7 @@ export default function Home() {
         </motion.section>
 
         {/* 访问统计区 */}
-        <VisitCounter />
+        <EnhancedVisitCounter />
 
         {/* 倒计时区 */}
         <motion.section 
