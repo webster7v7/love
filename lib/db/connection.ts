@@ -90,7 +90,7 @@ export const connectionManager = new ConnectionManager()
 
 // 数据库连接实现
 export class NeonDatabaseConnection implements DatabaseConnection {
-  async query<T>(queryString: string, params?: unknown[]): Promise<T[]> {
+  async query<T>(queryString: string, _params?: unknown[]): Promise<T[]> {
     try {
       const { sql } = initializeSql()
       // Neon 需要使用模板字符串，这里我们使用 drizzleSql.raw() 来处理字符串查询

@@ -147,14 +147,14 @@ export class RetryManager {
     operation: () => Promise<T>,
     context?: string
   ): Promise<T> {
-    let lastError: ErrorInfo | null = null
+    // let lastError: ErrorInfo | null = null // 保留用于调试
     
     for (let attempt = 1; attempt <= this.config.maxAttempts; attempt++) {
       try {
         return await operation()
       } catch (error) {
         const errorInfo = ErrorClassifier.classify(error)
-        lastError = errorInfo
+        // lastError = errorInfo // 保留用于调试
         
         // 记录错误
         ErrorLogger.log(errorInfo, { context, attempt })

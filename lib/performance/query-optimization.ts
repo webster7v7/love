@@ -247,7 +247,7 @@ export class QueryOptimizer {
   /**
    * 分析查询性能
    */
-  static async analyzeQuery(query: string, params: any[] = []): Promise<{
+  static async analyzeQuery(query: string, _params: any[] = []): Promise<{
     executionTime: number
     planningTime: number
     totalCost: number

@@ -215,7 +215,7 @@ export function getLocalStorageUsage(): {
       itemSizes,
       available: true
     }
-  } catch (error) {
+  } catch (_error) {
     return {
       totalSize: 0,
       itemSizes: {},
