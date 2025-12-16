@@ -145,11 +145,12 @@ export default function PhotoGallery() {
           URL.revokeObjectURL(previewUrl)
         }
       } else {
-        alert('添加照片失败，请重试')
+        console.error('Photo creation failed:', result.error)
+        alert(`添加照片失败：${result.error || '请重试'}`)
       }
     } catch (error) {
       console.error('Failed to add photo:', error)
-      alert('添加照片失败，请重试')
+      alert(`添加照片失败：${error instanceof Error ? error.message : '请重试'}`)
     } finally {
       setUploading(false)
     }

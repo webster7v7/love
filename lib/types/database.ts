@@ -94,18 +94,23 @@ const ColorSchema = z.string()
   .default('#FFE4E1')
 
 const UrlSchema = z.string()
-  .url('请输入有效的URL')
   .min(1, 'URL不能为空')
   .refine(
     url => {
       try {
+        // 检查是否为 data URL (Base64 图片)
+        if (url.startsWith('data:image/')) {
+          return true
+        }
+        
+        // 检查是否为有效的 HTTP/HTTPS URL
         const parsed = new URL(url)
         return ['http:', 'https:'].includes(parsed.protocol)
       } catch {
         return false
       }
     },
-    '只支持 HTTP 和 HTTPS 协议'
+    '请输入有效的图片URL或选择图片文件'
   )
 
 const CaptionSchema = z.string()
