@@ -109,27 +109,26 @@ export async function getVisitStats(): Promise<{
  * 获取访问统计（带缓存）
  */
 export async function getVisitStatsWithCache(): Promise<VisitStats> {
-  try {
-    const result = await getVisitStats()
-    
-    if (result.success && result.stats) {
-      return result.stats
-    }
-    
-    // 如果数据库查询失败，返回默认值
-    return {
-      daily: 0,
-      weekly: 0,
-      monthly: 0,
-      total: 0,
-    }
-  } catch (error) {
-    console.error('Failed to get cached visit stats:', error)
-    return {
-      daily: 0,
-      weekly: 0,
-      monthly: 0,
-      total: 0,
-    }
-  }
+  // 使用动态导入避免服务端导入问题
+  const { dataCache } = await import('@/lib/cache')
+  
+  return dataCache.getOrSet(
+    'visit-stats',
+    async () => {
+      const result = await getVisitStats()
+      
+      if (result.success && result.stats) {
+        return result.stats
+      }
+      
+      // 如果数据库查询失败，返回默认值
+      return {
+        daily: 0,
+        weekly: 0,
+        monthly: 0,
+        total: 0,
+      }
+    },
+    30000 // 30秒缓存，访问统计更新频繁
+  )
 }
