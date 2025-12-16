@@ -48,7 +48,7 @@ export async function recordVisit(): Promise<{
     }
 
     // 获取请求头信息
-    const headersList = headers()
+    const headersList = await headers()
     const userAgent = headersList.get('user-agent') || undefined
     const forwardedFor = headersList.get('x-forwarded-for')
     const realIp = headersList.get('x-real-ip')

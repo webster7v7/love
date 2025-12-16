@@ -11,15 +11,15 @@ export interface DatabaseConnection {
 
 // 创建Neon连接 - 延迟初始化
 let sql: ReturnType<typeof neon> | null = null
-let db: ReturnType<typeof drizzle> | null = null
+let dbInstance: ReturnType<typeof drizzle> | null = null
 
 function initializeSql() {
   if (!sql) {
     const dbConfig = getDbConfig()
     sql = neon(dbConfig.connectionString)
-    db = drizzle(sql)
+    dbInstance = drizzle(sql)
   }
-  return { sql, db }
+  return { sql, db: dbInstance }
 }
 
 // 导出数据库实例
@@ -27,6 +27,9 @@ export function getDb() {
   const { db } = initializeSql()
   return db
 }
+
+// 直接导出 db 实例（向后兼容）
+export const db = getDb()
 
 // 连接状态管理
 class ConnectionManager {
@@ -100,11 +103,11 @@ export class NeonDatabaseConnection implements DatabaseConnection {
   }
 
   async transaction<T>(callback: (tx: unknown) => Promise<T>): Promise<T> {
-    const { db } = initializeSql()
-    if (!db) {
+    const { db: dbConn } = initializeSql()
+    if (!dbConn) {
       throw new Error('Database not initialized')
     }
-    return await db.transaction(callback)
+    return await dbConn.transaction(callback)
   }
 }
 

@@ -19,21 +19,25 @@ export default function FloatingStars() {
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    // 确保只在客户端运行
-    setIsClient(true)
+    // 使用 setTimeout 避免直接在 effect 中调用 setState
+    const timer = setTimeout(() => {
+      setIsClient(true)
+      
+      // 生成随机星星配置
+      const newStars = Array.from({ length: 15 }, (_, i) => ({
+        id: i,
+        left: `${Math.random() * 100}%`,
+        size: Math.random() * 15 + 15, // 15-30px
+        duration: Math.random() * 6 + 6, // 6-12秒
+        delay: Math.random() * 6, // 0-6秒延迟
+        opacity: Math.random() * 0.4 + 0.3, // 0.3-0.7透明度
+        rotation: Math.random() * 360, // 随机初始旋转
+      }))
+      
+      setStars(newStars)
+    }, 0)
     
-    // 生成随机星星配置
-    const newStars = Array.from({ length: 15 }, (_, i) => ({
-      id: i,
-      left: `${Math.random() * 100}%`,
-      size: Math.random() * 15 + 15, // 15-30px
-      duration: Math.random() * 6 + 6, // 6-12秒
-      delay: Math.random() * 6, // 0-6秒延迟
-      opacity: Math.random() * 0.4 + 0.3, // 0.3-0.7透明度
-      rotation: Math.random() * 360, // 随机初始旋转
-    }))
-    
-    setStars(newStars)
+    return () => clearTimeout(timer)
   }, [])
 
   // 在服务端或客户端初始化之前不渲染任何内容

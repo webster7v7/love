@@ -117,8 +117,10 @@ export default function CountdownTimer() {
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    // 确保只在客户端运行
-    setIsClient(true)
+    // 使用 setTimeout 避免直接在 effect 中调用 setState
+    const timer = setTimeout(() => {
+      setIsClient(true)
+    }, 0)
     
     const calculateTime = () => {
       const now = new Date().getTime()
@@ -140,7 +142,10 @@ export default function CountdownTimer() {
     calculateTime()
     const interval = setInterval(calculateTime, 1000)
 
-    return () => clearInterval(interval)
+    return () => {
+      clearTimeout(timer)
+      clearInterval(interval)
+    }
   }, [])
 
   // 在服务端或客户端初始化之前显示占位符

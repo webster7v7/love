@@ -1,7 +1,6 @@
-import { db } from '../db/connection'
+import { getDb } from '../db/connection'
 import { visits, type NewVisit, type Visit } from '../db/schema'
 import { sql, desc, gte, and } from 'drizzle-orm'
-import { BaseRepository } from './base'
 
 export interface VisitStats {
   daily: number
@@ -10,14 +9,20 @@ export interface VisitStats {
   total: number
 }
 
-export class VisitsRepository extends BaseRepository {
+export class VisitsRepository {
   /**
    * 记录访问（防止重复）
    */
   async recordVisit(sessionId: string, userAgent?: string, ipHash?: string): Promise<Visit | null> {
     try {
+      const dbInstance = getDb()
+      if (!dbInstance) {
+        console.error('Database not available')
+        return null
+      }
+
       // 检查是否已经记录过这个会话
-      const existing = await db
+      const existing = await dbInstance
         .select()
         .from(visits)
         .where(sql`${visits.sessionId} = ${sessionId}`)
@@ -35,7 +40,7 @@ export class VisitsRepository extends BaseRepository {
         ipHash: ipHash || null,
       }
 
-      const result = await db.insert(visits).values(newVisit).returning()
+      const result = await dbInstance.insert(visits).values(newVisit).returning()
       return result[0] || null
     } catch (error) {
       console.error('Failed to record visit:', error)
@@ -48,6 +53,12 @@ export class VisitsRepository extends BaseRepository {
    */
   async getStats(): Promise<VisitStats> {
     try {
+      const dbInstance = getDb()
+      if (!dbInstance) {
+        console.error('Database not available')
+        return { daily: 0, weekly: 0, monthly: 0, total: 0 }
+      }
+
       const now = new Date()
       
       // 今日开始时间
@@ -66,25 +77,25 @@ export class VisitsRepository extends BaseRepository {
       // 并行查询所有统计数据
       const [dailyResult, weeklyResult, monthlyResult, totalResult] = await Promise.all([
         // 今日访问
-        db
+        dbInstance
           .select({ count: sql<number>`count(*)` })
           .from(visits)
           .where(gte(visits.createdAt, todayStart)),
         
         // 本周访问
-        db
+        dbInstance
           .select({ count: sql<number>`count(*)` })
           .from(visits)
           .where(gte(visits.createdAt, weekStart)),
         
         // 本月访问
-        db
+        dbInstance
           .select({ count: sql<number>`count(*)` })
           .from(visits)
           .where(gte(visits.createdAt, monthStart)),
         
         // 总访问
-        db
+        dbInstance
           .select({ count: sql<number>`count(*)` })
           .from(visits)
       ])
@@ -111,7 +122,13 @@ export class VisitsRepository extends BaseRepository {
    */
   async getRecentVisits(limit: number = 10): Promise<Visit[]> {
     try {
-      return await db
+      const dbInstance = getDb()
+      if (!dbInstance) {
+        console.error('Database not available')
+        return []
+      }
+
+      return await dbInstance
         .select()
         .from(visits)
         .orderBy(desc(visits.createdAt))
@@ -127,10 +144,16 @@ export class VisitsRepository extends BaseRepository {
    */
   async cleanupOldVisits(daysToKeep: number = 365): Promise<number> {
     try {
+      const dbInstance = getDb()
+      if (!dbInstance) {
+        console.error('Database not available')
+        return 0
+      }
+
       const cutoffDate = new Date()
       cutoffDate.setDate(cutoffDate.getDate() - daysToKeep)
 
-      const result = await db
+      const result = await dbInstance
         .delete(visits)
         .where(sql`${visits.createdAt} < ${cutoffDate}`)
 

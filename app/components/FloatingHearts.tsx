@@ -18,20 +18,24 @@ export default function FloatingHearts() {
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    // 确保只在客户端运行
-    setIsClient(true)
+    // 使用 setTimeout 避免直接在 effect 中调用 setState
+    const timer = setTimeout(() => {
+      setIsClient(true)
+      
+      // 生成随机爱心配置
+      const newHearts = Array.from({ length: 20 }, (_, i) => ({
+        id: i,
+        left: `${Math.random() * 100}%`,
+        size: Math.random() * 20 + 20, // 20-40px
+        duration: Math.random() * 5 + 5, // 5-10秒
+        delay: Math.random() * 5, // 0-5秒延迟
+        opacity: Math.random() * 0.3 + 0.3, // 0.3-0.6透明度
+      }))
+      
+      setHearts(newHearts)
+    }, 0)
     
-    // 生成随机爱心配置
-    const newHearts = Array.from({ length: 20 }, (_, i) => ({
-      id: i,
-      left: `${Math.random() * 100}%`,
-      size: Math.random() * 20 + 20, // 20-40px
-      duration: Math.random() * 5 + 5, // 5-10秒
-      delay: Math.random() * 5, // 0-5秒延迟
-      opacity: Math.random() * 0.3 + 0.3, // 0.3-0.6透明度
-    }))
-    
-    setHearts(newHearts)
+    return () => clearTimeout(timer)
   }, [])
 
   // 在服务端或客户端初始化之前不渲染任何内容
