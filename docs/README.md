@@ -25,6 +25,8 @@
 - **[PHOTO-UPLOAD-FEATURE.md](./PHOTO-UPLOAD-FEATURE.md)** - 照片上传功能
 - **[ADMIN-PERMISSION-SYSTEM.md](./ADMIN-PERMISSION-SYSTEM.md)** - 管理员权限系统
 - **[VISIT-STATISTICS-UPGRADE.md](./VISIT-STATISTICS-UPGRADE.md)** - 访问统计功能升级
+- **[VISIT-STATS-FIX-REPORT.md](./VISIT-STATS-FIX-REPORT.md)** - 访问统计数据准确性修复
+- **[FINAL-VISIT-STATS-COMPLETION.md](./FINAL-VISIT-STATS-COMPLETION.md)** - 访问统计修复最终完成报告
 
 ### 📖 使用指南
 - **[../README.md](../README.md)** - 项目主文档和快速开始
@@ -60,4 +62,4 @@
 
 所有文档都经过整理和更新，确保信息准确和最新。如果发现任何问题或需要更多信息，请参考相应的文档文件。
 
-**最后更新**: 2025年12月16日
+**最后更新**: 2025年12月17日

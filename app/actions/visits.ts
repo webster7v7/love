@@ -12,13 +12,29 @@ export interface VisitStats {
 }
 
 /**
- * 生成会话ID（基于用户代理和时间戳）
+ * 生成会话ID（基于浏览器指纹和日期）
  */
 function generateSessionId(): string {
-  const timestamp = Date.now()
-  const random = Math.random().toString(36).substring(2)
+  // 在服务端环境中，我们需要基于请求信息生成稳定的会话ID
+  if (typeof window === 'undefined') {
+    // 服务端：基于日期生成，同一天内相同
+    const today = new Date().toDateString()
+    return createHash('sha256')
+      .update(`server-session-${today}`)
+      .digest('hex')
+      .substring(0, 32)
+  }
+  
+  // 客户端：基于浏览器指纹生成稳定的会话ID
+  const fingerprint = [
+    navigator.userAgent,
+    navigator.language,
+    screen.width + 'x' + screen.height,
+    new Date().toDateString() // 每天更新一次会话
+  ].join('|')
+  
   return createHash('sha256')
-    .update(`${timestamp}-${random}`)
+    .update(fingerprint)
     .digest('hex')
     .substring(0, 32)
 }
@@ -36,7 +52,7 @@ function generateIpHash(ip: string): string {
 /**
  * 记录访问
  */
-export async function recordVisit(): Promise<{
+export async function recordVisit(clientSessionId?: string): Promise<{
   success: boolean
   sessionId?: string
   error?: string
@@ -56,11 +72,11 @@ export async function recordVisit(): Promise<{
     // 获取IP地址（优先级：x-forwarded-for > x-real-ip > 默认）
     const ip = forwardedFor?.split(',')[0]?.trim() || realIp || '127.0.0.1'
     
-    // 生成会话ID和IP哈希
-    const sessionId = generateSessionId()
+    // 使用客户端提供的会话ID，或生成新的
+    const sessionId = clientSessionId || generateSessionId()
     const ipHash = generateIpHash(ip)
 
-    // 记录访问
+    // 记录访问（如果会话ID已存在则不重复记录）
     const visit = await repositories.visits.recordVisit(sessionId, userAgent, ipHash)
 
     return {

@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { getVisitStatsWithCache, getRealTimeVisitStats, recordVisit, refreshVisitStatsCache } from '../actions/visits'
+import { getVisitStatsWithCache, getRealTimeVisitStats, refreshVisitStatsCache } from '../actions/visits'
+import { recordClientVisit, shouldRecordVisit } from '../actions/client-visits'
 
 interface VisitStats {
   daily: number
@@ -95,16 +96,24 @@ export function useRealTimeVisitStats(
   const recordUserVisit = useCallback(async () => {
     if (hasRecordedVisit.current || !recordVisitOnMount) return
 
+    // 检查是否需要记录访问
+    if (!shouldRecordVisit()) {
+      hasRecordedVisit.current = true
+      return
+    }
+
     try {
-      await recordVisit()
+      const result = await recordClientVisit()
       hasRecordedVisit.current = true
       
-      // 记录访问后延迟刷新统计
-      setTimeout(() => {
-        if (isMountedRef.current) {
-          forceRefresh()
-        }
-      }, 1500)
+      // 只有成功记录新访问时才刷新统计
+      if (result.success && result.isNewSession) {
+        setTimeout(() => {
+          if (isMountedRef.current) {
+            forceRefresh()
+          }
+        }, 1500)
+      }
     } catch (error) {
       console.error('Failed to record visit:', error)
     }
