@@ -108,7 +108,7 @@ export function validateConvertedPhoto(data: CreatePhotoInput): {
   
   try {
     new URL(data.url)
-  } catch {
+  } catch (error) {
     errors.push('Invalid URL format')
   }
   

@@ -45,7 +45,7 @@ async function verifySetup() {
   // 4. 检查schema文件
   console.log('4. Schema Files:')
   try {
-    const fs = require('fs')
+    const fs = await import('fs')
     const schemaExists = fs.existsSync('./lib/db/schema.ts')
     const configExists = fs.existsSync('./lib/db/config.ts')
     const connectionExists = fs.existsSync('./lib/db/connection.ts')

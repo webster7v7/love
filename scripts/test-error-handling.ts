@@ -185,7 +185,7 @@ async function testErrorHandling() {
   try {
     const result = await errorHandler.retry.execute(testOperation)
     console.log('❌ Should have failed')
-  } catch (error) {
+  } catch {
     console.log('✅ Primary operation correctly failed')
     
     // 尝试降级服务

@@ -67,7 +67,7 @@ async function testServerActions() {
       console.log('✅ Message created successfully')
       
       // 获取所有留言
-      const messagesResult = await getMessages({ limit: 5 })
+      const messagesResult = await getMessages()
       console.log('Get messages result:', messagesResult)
       console.log('✅ Messages retrieved successfully')
     } else {

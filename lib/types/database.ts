@@ -5,6 +5,7 @@ export interface Message {
   id: string
   content: string
   color: string
+  author?: string | null
   createdAt: Date
   updatedAt: Date
 }
@@ -32,6 +33,7 @@ export interface LegacyMessage {
   date: string
   createdAt: number
   color: string
+  author?: string | null
 }
 
 export interface LegacyPhoto {
@@ -52,6 +54,7 @@ export interface LegacyQuote {
 export interface CreateMessageData {
   content: string
   color?: string
+  author?: string
 }
 
 export interface CreatePhotoData {
@@ -68,6 +71,7 @@ export interface CreateQuoteData {
 export interface UpdateMessageData {
   content?: string
   color?: string
+  author?: string
 }
 
 export interface UpdatePhotoData {
@@ -108,15 +112,24 @@ const CaptionSchema = z.string()
   .max(50, '描述不能超过50字符')
   .default('')
 
+const AuthorSchema = z.string()
+  .max(20, '昵称不能超过20字符')
+  .min(1, '昵称不能为空')
+  .trim()
+  .refine(val => val.length > 0, '昵称不能只包含空白字符')
+  .optional()
+
 // Zod验证schemas
 export const CreateMessageSchema = z.object({
   content: ContentSchema,
   color: ColorSchema.optional(),
+  author: AuthorSchema,
 }).strict()
 
 export const UpdateMessageSchema = z.object({
   content: ContentSchema.optional(),
   color: ColorSchema.optional(),
+  author: AuthorSchema,
 }).strict()
 
 export const MessageSchema = z.object({
@@ -238,6 +251,7 @@ export function messageToLegacy(message: Message): LegacyMessage {
     }),
     createdAt: message.createdAt.getTime(),
     color: message.color,
+    author: message.author,
   }
 }
 

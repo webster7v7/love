@@ -9,7 +9,7 @@ import {
   getRepositoryStats,
   checkRepositoryHealth 
 } from '../lib/repositories'
-import { MessageFactory, PhotoFactory, QuoteFactory } from '../lib/db/factories'
+import { MessageFactory } from '../lib/db/factories'
 
 async function testRepositories() {
   console.log('🧪 Testing Repository Layer...\n')
@@ -54,7 +54,12 @@ async function testRepositories() {
   try {
     // 创建测试留言
     const messageData = MessageFactory.create({ content: '测试留言Repository' })
-    const createdMessage = await repositories.messages.create(messageData)
+    const createData = {
+      content: messageData.content,
+      color: messageData.color,
+      author: messageData.author || undefined
+    }
+    const createdMessage = await repositories.messages.create(createData)
     console.log('   ✅ Message created:', createdMessage.id)
     
     // 查找留言
@@ -190,7 +195,11 @@ async function testRepositories() {
   totalTests++
   try {
     // 批量创建留言
-    const batchMessages = MessageFactory.createBatch(3)
+    const batchMessages = MessageFactory.createBatch(3).map(msg => ({
+      content: msg.content,
+      color: msg.color,
+      author: msg.author || undefined
+    }))
     const createdMessages = await repositories.messages.createMany(batchMessages)
     console.log('   ✅ Batch messages created:', createdMessages.length)
     
@@ -237,7 +246,11 @@ async function testRepositories() {
   totalTests++
   try {
     // 创建一些测试数据
-    const testMessages = MessageFactory.createBatch(5)
+    const testMessages = MessageFactory.createBatch(5).map(msg => ({
+      content: msg.content,
+      color: msg.color,
+      author: msg.author || undefined
+    }))
     await repositories.messages.createMany(testMessages)
     
     // 测试分页
@@ -271,7 +284,7 @@ async function testRepositories() {
     try {
       await repositories.messages.findById('invalid-id')
       console.log('   ❌ Should have thrown error for invalid ID')
-    } catch (error) {
+    } catch {
       console.log('   ✅ Invalid ID correctly rejected')
     }
     
@@ -285,7 +298,7 @@ async function testRepositories() {
     try {
       await repositories.messages.create({ content: '', color: 'invalid' } as any)
       console.log('   ❌ Should have thrown error for invalid data')
-    } catch (error) {
+    } catch {
       console.log('   ✅ Invalid data correctly rejected')
     }
     

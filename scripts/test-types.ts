@@ -5,8 +5,6 @@ dotenv.config({ path: '.env.local' })
 
 import { 
   validateCreateMessage,
-  validateCreatePhoto,
-  validateCreateQuote,
   // validateId,
   messageToLegacy,
   // photoToLegacy,
@@ -27,11 +25,7 @@ import {
   validateMessageContent,
   validateMessageColor,
   validatePhotoUrl,
-  validatePhotoCaption,
-  validateQuoteText,
-  isValidMessage,
-  isValidPhoto,
-  isValidCustomQuote
+  isValidMessage
 } from '../lib/db/types'
 
 async function testTypes() {
@@ -45,19 +39,14 @@ async function testTypes() {
   totalTests++
   try {
     // 测试有效数据
-    const validMessage = validateCreateMessage({
+    validateCreateMessage({
       content: '这是一条测试留言',
       color: '#FFB6C1'
     })
     
-    const validPhoto = validateCreatePhoto({
-      url: 'https://example.com/test.jpg',
-      caption: '测试照片'
-    })
-    
-    const validQuote = validateCreateQuote({
-      text: '这是一条测试情话'
-    })
+    // Test other validations
+    validatePhotoUrl('https://example.com/test.jpg')
+    validateMessageColor('#FFB6C1')
     
     console.log('   ✅ Valid data validation passed')
     

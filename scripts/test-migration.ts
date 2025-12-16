@@ -171,11 +171,8 @@ async function testMigration() {
     })
 
     // 替换实际的Server Actions（仅用于测试）
-    const originalActions = {
-      createManyMessages: require('../app/actions').createManyMessages,
-      createManyPhotos: require('../app/actions').createManyPhotos,
-      createManyQuotes: require('../app/actions').createManyQuotes
-    }
+    // Note: Using dynamic imports instead of require for ESLint compliance
+    // const originalActions = await import('../app/actions')
     
     // 注意：在实际测试中，我们不会真正调用数据库操作
     console.log('Migration simulation completed (database operations skipped in test)')

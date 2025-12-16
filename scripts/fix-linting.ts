@@ -1,8 +1,6 @@
 #!/usr/bin/env tsx
 
 import { readFile, writeFile } from 'fs/promises'
-import { readdir } from 'fs/promises'
-import { join } from 'path'
 
 /**
  * 批量修复常见的linting问题
@@ -42,14 +40,14 @@ async function fixUnusedErrorVariables() {
         /} catch \(error\) \{[\s\S]*?(?=\n\s*})/g,
         (match) => {
           if (!match.includes('error.') && !match.includes('error)') && !match.includes('error,')) {
-            return match.replace('} catch (error) {', '} catch (_error) {')
+            return match.replace('} catch {', '} catch (_error) {')
           }
           return match
         }
       )
       
       await writeFile(file, content)
-    } catch (err) {
+    } catch {
       // 忽略读取错误
     }
   }
@@ -85,7 +83,7 @@ async function fixPreferConstIssues() {
       )
       
       await writeFile(file, content)
-    } catch (err) {
+    } catch {
       // 忽略读取错误
     }
   }
@@ -117,7 +115,7 @@ async function fixUnusedImports() {
       }
       
       await writeFile(file, content)
-    } catch (err) {
+    } catch {
       // 文件可能不存在，忽略
     }
   }

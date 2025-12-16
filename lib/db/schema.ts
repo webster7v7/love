@@ -6,6 +6,7 @@ export const messages = pgTable('messages', {
   id: uuid('id').primaryKey().default(sql`gen_random_uuid()`),
   content: text('content').notNull(),
   color: varchar('color', { length: 7 }).notNull().default('#FFE4E1'),
+  author: varchar('author', { length: 20 }),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().default(sql`NOW()`),
   updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().default(sql`NOW()`),
 }, (table) => ({
@@ -14,6 +15,8 @@ export const messages = pgTable('messages', {
   contentLengthCheck: check('messages_content_length_check', sql`length(${table.content}) > 0 AND length(${table.content}) <= 200`),
   // 添加颜色格式约束
   colorFormatCheck: check('messages_color_format_check', sql`${table.color} ~ '^#[0-9A-Fa-f]{6}$'`),
+  // 添加昵称长度约束
+  authorLengthCheck: check('messages_author_length_check', sql`${table.author} IS NULL OR (length(${table.author}) > 0 AND length(${table.author}) <= 20)`),
 }))
 
 // Photos表 - 添加URL和描述约束

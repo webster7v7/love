@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
-import { FaPlus, FaTimes, FaImage, FaLock } from 'react-icons/fa'
+import { FaPlus, FaTimes, FaImage, FaLock, FaUpload, FaLink } from 'react-icons/fa'
 import { 
   createPhoto, 
   getPhotos, 
@@ -29,6 +29,10 @@ export default function PhotoGallery() {
   const [loading, setLoading] = useState(true)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  const [uploadMethod, setUploadMethod] = useState<'url' | 'file'>('file')
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [previewUrl, setPreviewUrl] = useState<string>('')
+  const [uploading, setUploading] = useState(false)
   
   const { isAuthenticated, login, extendSession } = useAuth()
 
@@ -60,18 +64,64 @@ export default function PhotoGallery() {
     return () => clearTimeout(timer)
   }, [])
 
-  const addPhoto = async () => {
-    const trimmedUrl = newPhotoUrl.trim()
-    const trimmedCaption = newPhotoCaption.trim()
+  // 处理文件选择
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0]
+    if (!file) return
 
-    if (!trimmedUrl) {
-      alert('请输入照片链接')
+    // 检查文件类型
+    if (!file.type.startsWith('image/')) {
+      alert('请选择图片文件')
       return
     }
 
+    // 检查文件大小 (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      alert('图片文件不能超过 5MB')
+      return
+    }
+
+    setSelectedFile(file)
+    
+    // 创建预览URL
+    const url = URL.createObjectURL(file)
+    setPreviewUrl(url)
+  }
+
+  // 将文件转换为 Base64
+  const fileToBase64 = (file: File): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.readAsDataURL(file)
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = error => reject(error)
+    })
+  }
+
+  const addPhoto = async () => {
+    setUploading(true)
+    
     try {
+      let photoUrl = ''
+      const trimmedCaption = newPhotoCaption.trim()
+
+      if (uploadMethod === 'file' && selectedFile) {
+        // 将文件转换为 Base64 URL
+        photoUrl = await fileToBase64(selectedFile)
+      } else if (uploadMethod === 'url') {
+        const trimmedUrl = newPhotoUrl.trim()
+        if (!trimmedUrl) {
+          alert('请输入照片链接')
+          return
+        }
+        photoUrl = trimmedUrl
+      } else {
+        alert('请选择照片或输入照片链接')
+        return
+      }
+
       const result = await createPhoto({
-        url: trimmedUrl,
+        url: photoUrl,
         caption: trimmedCaption || '美好回忆',
         isCustom: true,
       })
@@ -82,16 +132,36 @@ export default function PhotoGallery() {
           isCustom: true,
         }
         setPhotos(prev => [...prev, newPhoto])
+        
+        // 重置表单
         setNewPhotoUrl('')
         setNewPhotoCaption('')
+        setSelectedFile(null)
+        setPreviewUrl('')
         setShowAddForm(false)
+        
+        // 清理预览URL
+        if (previewUrl) {
+          URL.revokeObjectURL(previewUrl)
+        }
       } else {
         alert('添加照片失败，请重试')
       }
     } catch (error) {
       console.error('Failed to add photo:', error)
       alert('添加照片失败，请重试')
+    } finally {
+      setUploading(false)
     }
+  }
+
+  // 清理预览URL
+  const clearPreview = () => {
+    if (previewUrl) {
+      URL.revokeObjectURL(previewUrl)
+      setPreviewUrl('')
+    }
+    setSelectedFile(null)
   }
 
   const handleDeletePhoto = async (id: string, isCustom: boolean) => {
@@ -188,14 +258,96 @@ export default function PhotoGallery() {
               exit={{ opacity: 0, height: 0 }}
               className="overflow-hidden"
             >
-              <div className="glass-card p-6 rounded-2xl space-y-4 max-w-2xl mx-auto">
-                <input
-                  type="text"
-                  value={newPhotoUrl}
-                  onChange={(e) => setNewPhotoUrl(e.target.value)}
-                  placeholder="照片链接 (例如: https://example.com/image.jpg)"
-                  className="romantic-input w-full"
-                />
+              <div className="glass-card p-6 rounded-2xl space-y-6 max-w-2xl mx-auto">
+                {/* 上传方式选择 */}
+                <div className="flex gap-2 p-1 bg-gray-100 rounded-lg">
+                  <button
+                    onClick={() => {
+                      setUploadMethod('file')
+                      clearPreview()
+                      setNewPhotoUrl('')
+                    }}
+                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                      uploadMethod === 'file'
+                        ? 'bg-white text-pink-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    <FaUpload />
+                    上传图片
+                  </button>
+                  <button
+                    onClick={() => {
+                      setUploadMethod('url')
+                      clearPreview()
+                    }}
+                    className={`flex-1 py-2 px-4 rounded-md text-sm font-medium transition-colors flex items-center justify-center gap-2 ${
+                      uploadMethod === 'url'
+                        ? 'bg-white text-pink-600 shadow-sm'
+                        : 'text-gray-600 hover:text-gray-800'
+                    }`}
+                  >
+                    <FaLink />
+                    图片链接
+                  </button>
+                </div>
+
+                {/* 文件上传区域 */}
+                {uploadMethod === 'file' && (
+                  <div className="space-y-4">
+                    <div className="border-2 border-dashed border-pink-300 rounded-lg p-6 text-center hover:border-pink-400 transition-colors">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                        id="photo-upload"
+                      />
+                      <label
+                        htmlFor="photo-upload"
+                        className="cursor-pointer flex flex-col items-center gap-3"
+                      >
+                        <FaUpload className="text-3xl text-pink-400" />
+                        <div>
+                          <p className="text-gray-700 font-medium">点击选择图片</p>
+                          <p className="text-sm text-gray-500 mt-1">
+                            支持 JPG、PNG、GIF 格式，最大 5MB
+                          </p>
+                        </div>
+                      </label>
+                    </div>
+
+                    {/* 图片预览 */}
+                    {previewUrl && (
+                      <div className="relative">
+                        <img
+                          src={previewUrl}
+                          alt="预览"
+                          className="w-full h-48 object-cover rounded-lg"
+                        />
+                        <button
+                          onClick={clearPreview}
+                          className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
+                        >
+                          <FaTimes size={12} />
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* URL 输入区域 */}
+                {uploadMethod === 'url' && (
+                  <input
+                    type="text"
+                    value={newPhotoUrl}
+                    onChange={(e) => setNewPhotoUrl(e.target.value)}
+                    placeholder="照片链接 (例如: https://example.com/image.jpg)"
+                    className="romantic-input w-full"
+                  />
+                )}
+
+                {/* 照片描述 */}
                 <input
                   type="text"
                   value={newPhotoCaption}
@@ -204,8 +356,14 @@ export default function PhotoGallery() {
                   className="romantic-input w-full"
                   maxLength={50}
                 />
-                <button onClick={addPhoto} className="romantic-button w-full">
-                  确认添加
+
+                {/* 提交按钮 */}
+                <button 
+                  onClick={addPhoto} 
+                  disabled={uploading || (uploadMethod === 'file' && !selectedFile) || (uploadMethod === 'url' && !newPhotoUrl.trim())}
+                  className="romantic-button w-full disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {uploading ? '上传中...' : '确认添加'}
                 </button>
               </div>
             </motion.div>

@@ -47,7 +47,7 @@ async function testConstraints() {
         color: '#FFB6C1'
       })
       console.log('   ❌ Empty content message was inserted (constraint failed)')
-    } catch (error) {
+    } catch {
       console.log('   ✅ Empty content message correctly rejected')
       passedTests++
     }
@@ -62,7 +62,7 @@ async function testConstraints() {
         color: '#FFB6C1'
       })
       console.log('   ❌ Long message was inserted (constraint failed)')
-    } catch (error) {
+    } catch {
       console.log('   ✅ Long message correctly rejected')
       passedTests++
     }
@@ -76,7 +76,7 @@ async function testConstraints() {
         color: 'invalid-color'
       })
       console.log('   ❌ Invalid color was accepted (constraint failed)')
-    } catch (error) {
+    } catch {
       console.log('   ✅ Invalid color correctly rejected')
       passedTests++
     }
@@ -106,7 +106,7 @@ async function testConstraints() {
         isCustom: true
       })
       console.log('   ❌ Empty URL photo was inserted (constraint failed)')
-    } catch (error) {
+    } catch {
       console.log('   ✅ Empty URL photo correctly rejected')
       passedTests++
     }
@@ -121,7 +121,7 @@ async function testConstraints() {
         isCustom: true
       })
       console.log('   ❌ Long caption was accepted (constraint failed)')
-    } catch (error) {
+    } catch {
       console.log('   ✅ Long caption correctly rejected')
       passedTests++
     }
@@ -147,7 +147,7 @@ async function testConstraints() {
         text: ''
       })
       console.log('   ❌ Empty quote was inserted (constraint failed)')
-    } catch (error) {
+    } catch {
       console.log('   ✅ Empty quote correctly rejected')
       passedTests++
     }
@@ -160,7 +160,7 @@ async function testConstraints() {
         text: 'a'.repeat(201) // 201个字符，超过200的限制
       })
       console.log('    ❌ Long quote was accepted (constraint failed)')
-    } catch (error) {
+    } catch {
       console.log('    ✅ Long quote correctly rejected')
       passedTests++
     }

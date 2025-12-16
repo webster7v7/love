@@ -1,7 +1,7 @@
 #!/usr/bin/env tsx
 
 import { getDb } from '../lib/db/connection'
-import { photos, customQuotes } from '../lib/db/schema'
+import { photos } from '../lib/db/schema'
 import { eq } from 'drizzle-orm'
 
 // 默认照片数据

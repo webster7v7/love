@@ -67,7 +67,7 @@ export const getMessages = withErrorHandling(
     return messagesToLegacy(messages)
   },
   // 降级服务：从 localStorage 获取
-  async (_options?: QueryOptions): Promise<LegacyMessage[]> => {
+  async (): Promise<LegacyMessage[]> => {
     const messages = await fallbackService.messages.getAll()
     return messagesToLegacy(messages)
   }

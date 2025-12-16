@@ -13,7 +13,6 @@ const nextConfig: NextConfig = {
   
   // 输出配置（Vercel 自动处理）
   output: 'standalone',
-  
 
 };
 

@@ -14,7 +14,7 @@ import {
   createPaginatedResult,
   PaginationMetrics,
   ConnectionPool,
-  executeTransaction,
+
   TransactionMonitor,
   QueryPerformanceMonitor,
   getAllPerformanceMetrics,
@@ -68,7 +68,7 @@ async function testPerformanceOptimizations() {
     try {
       // 注意：在测试环境中，我们不会真正创建数据库连接
       console.log('Connection pool created successfully')
-    } catch (error) {
+    } catch {
       console.log('Connection pool test skipped (no database connection in test)')
     }
     

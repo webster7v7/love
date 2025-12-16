@@ -78,7 +78,7 @@ export default function EnhancedPhotoGallery() {
           loading: false
         }))
       }
-    } catch (error) {
+    } catch {
       setState(prev => ({
         ...prev,
         error: '网络连接失败，请稍后重试',
@@ -93,7 +93,7 @@ export default function EnhancedPhotoGallery() {
     
     try {
       await migrationManager.migrateFromLocalStorage({
-        onProgress: (progress, stage) => {
+        onProgress: (progress) => {
           setState(prev => ({ ...prev, migrationProgress: progress }))
         }
       })
@@ -176,7 +176,7 @@ export default function EnhancedPhotoGallery() {
           loading: false
         }))
       }
-    } catch (error) {
+    } catch {
       setState(prev => ({
         ...prev,
         error: '网络连接失败，请稍后重试',
@@ -205,7 +205,7 @@ export default function EnhancedPhotoGallery() {
           loading: false
         }))
       }
-    } catch (error) {
+    } catch {
       setState(prev => ({
         ...prev,
         error: '网络连接失败，请稍后重试',

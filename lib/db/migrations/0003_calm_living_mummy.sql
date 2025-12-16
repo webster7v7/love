@@ -1,0 +1,2 @@
+ALTER TABLE "messages" ADD COLUMN "author" varchar(20);--> statement-breakpoint
+ALTER TABLE "messages" ADD CONSTRAINT "messages_author_length_check" CHECK ("messages"."author" IS NULL OR (length("messages"."author") > 0 AND length("messages"."author") <= 20));

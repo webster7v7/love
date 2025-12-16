@@ -4,7 +4,7 @@ import * as dotenv from 'dotenv'
 dotenv.config({ path: '.env.local' })
 
 import { runMigrations, checkMigrationStatus, resetDatabase } from '../lib/db/migrate'
-import { seedDatabase, clearSeedData, reseedDatabase } from '../lib/db/seed'
+import { seedDatabase, reseedDatabase } from '../lib/db/seed'
 import { initializeDatabase } from '../lib/db/connection'
 
 // 命令行参数处理

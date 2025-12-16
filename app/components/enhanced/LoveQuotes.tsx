@@ -65,7 +65,7 @@ export default function EnhancedLoveQuotes() {
           loading: false
         }))
       }
-    } catch (error) {
+    } catch {
       setState(prev => ({
         ...prev,
         error: '网络连接失败，请稍后重试',
@@ -80,7 +80,7 @@ export default function EnhancedLoveQuotes() {
     
     try {
       await migrationManager.migrateFromLocalStorage({
-        onProgress: (progress, stage) => {
+        onProgress: (progress) => {
           setState(prev => ({ ...prev, migrationProgress: progress }))
         }
       })
@@ -176,7 +176,7 @@ export default function EnhancedLoveQuotes() {
           loading: false
         }))
       }
-    } catch (error) {
+    } catch {
       setState(prev => ({
         ...prev,
         error: '网络连接失败，请稍后重试',
@@ -208,7 +208,7 @@ export default function EnhancedLoveQuotes() {
           loading: false
         }))
       }
-    } catch (error) {
+    } catch {
       setState(prev => ({
         ...prev,
         error: '网络连接失败，请稍后重试',
@@ -231,7 +231,7 @@ export default function EnhancedLoveQuotes() {
     if (!currentQuote) return ''
     const randomNickname = getRandomNickname()
     return currentQuote.text.replace(/\{nickname\}/g, randomNickname)
-  }, [currentIndex, currentQuote])
+  }, [currentQuote])
 
   if (state.loading && !state.migrating && state.quotes.length === 0) {
     return (

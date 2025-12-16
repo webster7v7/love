@@ -35,13 +35,14 @@ export default function MessageBoard() {
   const [loading, setLoading] = useState(true)
   const [showPasswordModal, setShowPasswordModal] = useState(false)
   const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  const [newMessageAuthor, setNewMessageAuthor] = useState('')
   
   const { isAuthenticated, login, extendSession } = useAuth()
 
   // 加载留言数据
   const loadMessages = async () => {
     try {
-      const result = await getMessages({ limit: 50 })
+      const result = await getMessages()
       if (result.success && result.data) {
         setMessages(result.data)
       }
@@ -75,14 +76,18 @@ export default function MessageBoard() {
     }
 
     try {
+      const trimmedAuthor = newMessageAuthor.trim()
+      
       const result = await createMessage({
         content: trimmedContent,
         color: NOTE_COLORS[Math.floor(Math.random() * NOTE_COLORS.length)],
+        author: trimmedAuthor || undefined,
       })
 
       if (result.success && result.data) {
         setMessages(prev => [...prev, result.data!])
         setNewMessageContent('')
+        setNewMessageAuthor('')
         setShowAddForm(false)
       } else {
         alert('添加留言失败，请重试')
@@ -218,17 +223,30 @@ export default function MessageBoard() {
               className="overflow-hidden"
             >
               <div className="glass-card p-6 rounded-2xl space-y-4 max-w-2xl mx-auto">
-                <textarea
-                  value={newMessageContent}
-                  onChange={(e) => setNewMessageContent(e.target.value)}
-                  placeholder="写下你想说的话..."
-                  className="romantic-input w-full min-h-[120px] resize-none"
-                  maxLength={200}
-                />
+                <div className="space-y-4">
+                  <input
+                    type="text"
+                    value={newMessageAuthor}
+                    onChange={(e) => setNewMessageAuthor(e.target.value)}
+                    placeholder="你的昵称（可选）"
+                    className="romantic-input w-full"
+                    maxLength={20}
+                  />
+                  <textarea
+                    value={newMessageContent}
+                    onChange={(e) => setNewMessageContent(e.target.value)}
+                    placeholder="写下你想说的话..."
+                    className="romantic-input w-full min-h-[120px] resize-none"
+                    maxLength={200}
+                  />
+                </div>
                 <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-500">
-                    {newMessageContent.length} / 200
-                  </span>
+                  <div className="text-sm text-gray-500 space-y-1">
+                    <div>留言内容: {newMessageContent.length} / 200</div>
+                    {newMessageAuthor && (
+                      <div>昵称: {newMessageAuthor.length} / 20</div>
+                    )}
+                  </div>
                   <button onClick={addMessage} className="romantic-button text-sm">
                     确认添加
                   </button>
@@ -267,9 +285,17 @@ export default function MessageBoard() {
                     <FaHeart className="w-full h-full text-pink-600" />
                   </div>
 
-                  {/* 日期 */}
-                  <div className="text-xs text-gray-600 mb-3 font-medium">
-                    {message.date}
+                  {/* 头部信息 */}
+                  <div className="mb-3 space-y-1">
+                    {message.author && (
+                      <div className="text-sm font-semibold text-gray-700 flex items-center gap-2">
+                        <FaHeart className="text-pink-500 text-xs" />
+                        {message.author}
+                      </div>
+                    )}
+                    <div className="text-xs text-gray-600 font-medium">
+                      {message.date}
+                    </div>
                   </div>
 
                   {/* 内容 */}

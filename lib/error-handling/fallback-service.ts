@@ -153,11 +153,14 @@ export class MessageFallbackService extends BaseLocalStorageService<Message> {
   }
 
   // 重写 create 方法以接受 CreateMessageInput
-  async create(data: CreateMessageInput): Promise<Message> {
+  async create(data: CreateMessageInput): Promise<Message>
+  async create(data: Omit<Message, "id" | "createdAt">): Promise<Message>
+  async create(data: CreateMessageInput | Omit<Message, "id" | "createdAt">): Promise<Message> {
     const messageData = {
-      ...data,
+      content: data.content,
       color: data.color || '#FFE4E1', // 默认颜色
-      updatedAt: new Date() // 添加 updatedAt 字段
+      author: 'author' in data ? data.author || null : null, // 确保类型匹配
+      updatedAt: 'updatedAt' in data ? data.updatedAt : new Date() // 添加 updatedAt 字段
     }
     
     const newItem = this.addTimestamp({

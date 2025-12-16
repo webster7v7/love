@@ -23,14 +23,16 @@ export class MessageFactory {
     return {
       content: '这是一条测试留言',
       color: this.getRandomColor(),
+      author: null,
       ...overrides,
     }
   }
 
-  static createValid(content: string, color?: string): DrizzleNewMessage {
+  static createValid(content: string, color?: string, author?: string): DrizzleNewMessage {
     return {
       content: content.trim(),
       color: color || this.getRandomColor(),
+      author: author || null,
     }
   }
 
@@ -40,12 +42,13 @@ export class MessageFactory {
     invalidColor: DrizzleNewMessage
   } {
     return {
-      empty: { content: '', color: DEFAULT_VALUES.MESSAGE_COLOR },
+      empty: { content: '', color: DEFAULT_VALUES.MESSAGE_COLOR, author: null },
       tooLong: { 
         content: 'a'.repeat(CONSTRAINTS.MAX_CONTENT_LENGTH + 1), 
-        color: DEFAULT_VALUES.MESSAGE_COLOR 
+        color: DEFAULT_VALUES.MESSAGE_COLOR,
+        author: null
       },
-      invalidColor: { content: '测试内容', color: 'invalid-color' },
+      invalidColor: { content: '测试内容', color: 'invalid-color', author: null },
     }
   }
 
