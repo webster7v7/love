@@ -152,7 +152,7 @@ export default function CountdownTimer() {
   if (!isClient) {
     return (
       <div className="flex flex-wrap justify-center gap-4 md:gap-6">
-        {['天', '小时', '分钟', '秒'].map((label, index) => (
+        {['天', '小时', '分钟', '秒'].map((label) => (
           <div
             key={label}
             className="glass-card rounded-2xl p-6 min-w-[100px] flex flex-col items-center justify-center"

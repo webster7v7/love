@@ -3,16 +3,16 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { FaPlus, FaTimes, FaEdit, FaHeart } from 'react-icons/fa'
+import { 
+  createMessage, 
+  getMessages, 
+  updateMessage, 
+  deleteMessage as deleteMessageAction 
+} from '../actions/messages'
 
-interface Message {
-  id: string
-  content: string
-  date: string
-  createdAt: number
-  color: string
-}
+import { LegacyMessage } from '@/lib/types/database'
 
-const STORAGE_KEY = 'love-message-board'
+type Message = LegacyMessage
 
 const NOTE_COLORS = [
   '#FFE4E1', // 淡粉
@@ -30,22 +30,32 @@ export default function MessageBoard() {
   const [editingId, setEditingId] = useState<string | null>(null)
   const [editingContent, setEditingContent] = useState('')
   const [isClient, setIsClient] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    // 使用 setTimeout 避免同步 setState
-    setTimeout(() => setIsClient(true), 0)
+  // 加载留言数据
+  const loadMessages = async () => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) {
-        const loadedMessages: Message[] = JSON.parse(stored)
-        setTimeout(() => setMessages(loadedMessages), 0)
+      const result = await getMessages({ limit: 50 })
+      if (result.success && result.data) {
+        setMessages(result.data)
       }
     } catch (error) {
       console.error('Failed to load messages:', error)
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsClient(true)
+      loadMessages()
+    }, 0)
+    
+    return () => clearTimeout(timer)
   }, [])
 
-  const addMessage = () => {
+  const addMessage = async () => {
     const trimmedContent = newMessageContent.trim()
 
     if (!trimmedContent) {
@@ -58,41 +68,38 @@ export default function MessageBoard() {
       return
     }
 
-    const newMessage: Message = {
-      id: `msg-${Date.now()}`,
-      content: trimmedContent,
-      date: new Date().toLocaleDateString('zh-CN', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-      }),
-      createdAt: Date.now(),
-      color: NOTE_COLORS[Math.floor(Math.random() * NOTE_COLORS.length)],
-    }
-
-    const updatedMessages = [...messages, newMessage]
-    setMessages(updatedMessages)
-
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedMessages))
-    } catch (error) {
-      console.error('Failed to save message:', error)
-    }
+      const result = await createMessage({
+        content: trimmedContent,
+        color: NOTE_COLORS[Math.floor(Math.random() * NOTE_COLORS.length)],
+      })
 
-    setNewMessageContent('')
-    setShowAddForm(false)
+      if (result.success && result.data) {
+        setMessages(prev => [...prev, result.data!])
+        setNewMessageContent('')
+        setShowAddForm(false)
+      } else {
+        alert('添加留言失败，请重试')
+      }
+    } catch (error) {
+      console.error('Failed to add message:', error)
+      alert('添加留言失败，请重试')
+    }
   }
 
-  const deleteMessage = (id: string) => {
+  const handleDeleteMessage = async (id: string) => {
     if (!confirm('确定要删除这条留言吗？')) return
 
-    const updatedMessages = messages.filter(m => m.id !== id)
-    setMessages(updatedMessages)
-
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedMessages))
+      const result = await deleteMessageAction(id)
+      if (result.success) {
+        setMessages(prev => prev.filter(m => m.id !== id))
+      } else {
+        alert('删除失败，请重试')
+      }
     } catch (error) {
       console.error('Failed to delete message:', error)
+      alert('删除失败，请重试')
     }
   }
 
@@ -101,7 +108,7 @@ export default function MessageBoard() {
     setEditingContent(message.content)
   }
 
-  const saveEdit = (id: string) => {
+  const saveEdit = async (id: string) => {
     const trimmedContent = editingContent.trim()
 
     if (!trimmedContent) {
@@ -109,19 +116,21 @@ export default function MessageBoard() {
       return
     }
 
-    const updatedMessages = messages.map(m =>
-      m.id === id ? { ...m, content: trimmedContent } : m
-    )
-    setMessages(updatedMessages)
-
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedMessages))
+      const result = await updateMessage(id, { content: trimmedContent })
+      if (result.success && result.data) {
+        setMessages(prev => prev.map(m => 
+          m.id === id ? result.data! : m
+        ))
+        setEditingId(null)
+        setEditingContent('')
+      } else {
+        alert('更新失败，请重试')
+      }
     } catch (error) {
       console.error('Failed to update message:', error)
+      alert('更新失败，请重试')
     }
-
-    setEditingId(null)
-    setEditingContent('')
   }
 
   const cancelEdit = () => {
@@ -130,6 +139,14 @@ export default function MessageBoard() {
   }
 
   if (!isClient) return null
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <div className="text-gray-400">加载留言中...</div>
+      </div>
+    )
+  }
 
   return (
     <div className="w-full max-w-6xl">
@@ -265,7 +282,7 @@ export default function MessageBoard() {
                         <FaEdit size={12} />
                       </button>
                       <button
-                        onClick={() => deleteMessage(message.id)}
+                        onClick={() => handleDeleteMessage(message.id)}
                         className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
                         title="删除"
                       >

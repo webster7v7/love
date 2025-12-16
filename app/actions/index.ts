@@ -55,13 +55,10 @@ export {
 
 // 通用功能的Server Actions
 export {
-  withErrorHandling,
   healthCheck,
   getAllStats,
   initializeSystem,
   resetSystem,
-  withRetry,
-  processBatch,
   validateEnvironment,
 } from './common'
 

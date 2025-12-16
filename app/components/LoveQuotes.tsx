@@ -5,15 +5,14 @@ import { useState, useEffect, useMemo } from 'react'
 import { FaHeart, FaPlus, FaTrash, FaTimes } from 'react-icons/fa'
 import { loveQuotes } from '../data/loveQuotes'
 import { getRandomNickname } from '../data/nicknames'
+import { 
+  createQuote, 
+  getQuotes, 
+  deleteQuote as deleteQuoteAction 
+} from '../actions/quotes'
+import { LegacyQuote } from '@/lib/types/database'
 
-interface Quote {
-  id: string
-  text: string
-  isCustom: boolean
-  createdAt: number
-}
-
-const STORAGE_KEY = 'custom-love-quotes'
+type Quote = LegacyQuote
 
 export default function LoveQuotes() {
   const [quotes, setQuotes] = useState<Quote[]>([])
@@ -21,33 +20,48 @@ export default function LoveQuotes() {
   const [showAddForm, setShowAddForm] = useState(false)
   const [newQuoteText, setNewQuoteText] = useState('')
   const [isClient, setIsClient] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-  // 加载情话（预设 + 自定义）
-  useEffect(() => {
-    // 使用 setTimeout 避免同步 setState
-    setTimeout(() => setIsClient(true), 0)
-    
-    // 将预设情话（520条）转换为 Quote 对象
-    const defaultQuoteObjects: Quote[] = loveQuotes.map((text, index) => ({
-      id: `default-${index}`,
-      text,
-      isCustom: false,
-      createdAt: Date.now() - (loveQuotes.length - index) * 1000,
-    }))
-
-    // 从 localStorage 加载自定义情话
+  // 加载情话数据
+  const loadQuotes = async () => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) {
-        const customQuotes: Quote[] = JSON.parse(stored)
-        setTimeout(() => setQuotes([...defaultQuoteObjects, ...customQuotes]), 0)
+      // 将预设情话转换为 Quote 对象
+      const defaultQuoteObjects: Quote[] = loveQuotes.map((text, index) => ({
+        id: `default-${index}`,
+        text,
+        isCustom: false,
+        createdAt: Date.now() - (loveQuotes.length - index) * 1000,
+      }))
+
+      // 从数据库加载自定义情话
+      const result = await getQuotes({ limit: 100 })
+      if (result.success && result.data) {
+        setQuotes([...defaultQuoteObjects, ...result.data])
       } else {
-        setTimeout(() => setQuotes(defaultQuoteObjects), 0)
+        setQuotes(defaultQuoteObjects)
       }
     } catch (error) {
-      console.error('Failed to load custom quotes:', error)
-      setTimeout(() => setQuotes(defaultQuoteObjects), 0)
+      console.error('Failed to load quotes:', error)
+      // 如果数据库失败，至少显示预设情话
+      const defaultQuoteObjects: Quote[] = loveQuotes.map((text, index) => ({
+        id: `default-${index}`,
+        text,
+        isCustom: false,
+        createdAt: Date.now() - (loveQuotes.length - index) * 1000,
+      }))
+      setQuotes(defaultQuoteObjects)
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsClient(true)
+      loadQuotes()
+    }, 0)
+    
+    return () => clearTimeout(timer)
   }, [])
 
   // 自动轮播
@@ -62,7 +76,7 @@ export default function LoveQuotes() {
   }, [quotes.length])
 
   // 添加自定义情话
-  const addQuote = () => {
+  const addQuote = async () => {
     const trimmedText = newQuoteText.trim()
     
     if (!trimmedText) return
@@ -71,55 +85,57 @@ export default function LoveQuotes() {
       return
     }
 
-    const newQuote: Quote = {
-      id: `custom-${Date.now()}`,
-      text: trimmedText,
-      isCustom: true,
-      createdAt: Date.now(),
-    }
-
-    const updatedQuotes = [...quotes, newQuote]
-    setQuotes(updatedQuotes)
-    
-    // 保存自定义情话到 localStorage
-    const customQuotes = updatedQuotes.filter(q => q.isCustom)
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(customQuotes))
+      const result = await createQuote({ text: trimmedText, isCustom: true })
+      
+      if (result.success && result.data) {
+        const updatedQuotes = [...quotes, result.data]
+        setQuotes(updatedQuotes)
+        
+        // 重置表单
+        setNewQuoteText('')
+        setShowAddForm(false)
+        
+        // 自动切换到新添加的情话
+        setCurrentIndex(updatedQuotes.length - 1)
+      } else {
+        alert('添加情话失败，请重试')
+      }
     } catch (error) {
-      console.error('Failed to save custom quote:', error)
+      console.error('Failed to add quote:', error)
+      alert('添加情话失败，请重试')
     }
-
-    // 重置表单
-    setNewQuoteText('')
-    setShowAddForm(false)
-    
-    // 自动切换到新添加的情话
-    setCurrentIndex(updatedQuotes.length - 1)
   }
 
   // 删除自定义情话
-  const deleteQuote = (id: string) => {
+  const handleDeleteQuote = async (id: string) => {
+    // 不能删除预设情话
+    if (id.startsWith('default-')) return
+    
     if (!confirm('确定要删除这条情话吗？')) return
 
-    const updatedQuotes = quotes.filter(q => q.id !== id)
-    setQuotes(updatedQuotes)
-
-    // 更新 localStorage
-    const customQuotes = updatedQuotes.filter(q => q.isCustom)
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(customQuotes))
-    } catch (error) {
-      console.error('Failed to delete custom quote:', error)
-    }
+      const result = await deleteQuoteAction(id)
+      if (result.success) {
+        const updatedQuotes = quotes.filter(q => q.id !== id)
+        setQuotes(updatedQuotes)
 
-    // 调整当前索引
-    if (currentIndex >= updatedQuotes.length) {
-      setCurrentIndex(Math.max(0, updatedQuotes.length - 1))
+        // 调整当前索引
+        if (currentIndex >= updatedQuotes.length) {
+          setCurrentIndex(Math.max(0, updatedQuotes.length - 1))
+        }
+      } else {
+        alert('删除失败，请重试')
+      }
+    } catch (error) {
+      console.error('Failed to delete quote:', error)
+      alert('删除失败，请重试')
     }
   }
 
-  const customQuoteCount = quotes.filter(q => q.isCustom).length
+  const customQuoteCount = quotes.filter(q => !q.id.startsWith('default-')).length
   const currentQuote = quotes[currentIndex]
+  const isCustomQuote = currentQuote && !currentQuote.id.startsWith('default-')
 
   // 动态替换昵称 - 每次切换情话时选择新的随机昵称
   const displayText = useMemo(() => {
@@ -128,10 +144,12 @@ export default function LoveQuotes() {
     return currentQuote.text.replace(/\{nickname\}/g, randomNickname)
   }, [currentQuote])
 
-  if (!isClient || quotes.length === 0) {
+  if (!isClient) return null
+
+  if (loading || quotes.length === 0) {
     return (
       <div className="flex items-center justify-center min-h-[200px]">
-        <div className="text-gray-400">加载中...</div>
+        <div className="text-gray-400">加载情话中...</div>
       </div>
     )
   }
@@ -210,7 +228,7 @@ export default function LoveQuotes() {
           >
             <div className="flex items-center gap-3">
               <FaHeart className="text-4xl text-pink-500 heartbeat" />
-              {currentQuote?.isCustom && (
+              {isCustomQuote && (
                 <span className="text-xs bg-gradient-to-r from-pink-500 to-purple-500 text-white px-3 py-1 rounded-full font-medium">
                   自定义
                 </span>
@@ -222,9 +240,9 @@ export default function LoveQuotes() {
             </p>
 
             {/* 删除按钮 - 仅自定义情话显示 */}
-            {currentQuote?.isCustom && (
+            {isCustomQuote && (
               <motion.button
-                onClick={() => deleteQuote(currentQuote.id)}
+                onClick={() => handleDeleteQuote(currentQuote.id)}
                 className="text-red-400 hover:text-red-600 transition-colors flex items-center gap-2 text-sm"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -239,18 +257,21 @@ export default function LoveQuotes() {
 
       {/* 进度指示器 */}
       <div className="flex flex-wrap gap-2 justify-center max-w-full px-4">
-        {quotes.map((quote, index) => (
-          <button
-            key={quote.id}
-            onClick={() => setCurrentIndex(index)}
-            className={`transition-all rounded-full ${
-              index === currentIndex 
-                ? `${quote.isCustom ? 'bg-purple-500' : 'bg-pink-500'} w-8 h-2` 
-                : `${quote.isCustom ? 'bg-purple-300 hover:bg-purple-400' : 'bg-pink-300 hover:bg-pink-400'} w-2 h-2`
-            }`}
-            aria-label={`切换到第${index + 1}条情话${quote.isCustom ? '（自定义）' : ''}`}
-          />
-        ))}
+        {quotes.map((quote, index) => {
+          const isCustom = !quote.id.startsWith('default-')
+          return (
+            <button
+              key={quote.id}
+              onClick={() => setCurrentIndex(index)}
+              className={`transition-all rounded-full ${
+                index === currentIndex 
+                  ? `${isCustom ? 'bg-purple-500' : 'bg-pink-500'} w-8 h-2` 
+                  : `${isCustom ? 'bg-purple-300 hover:bg-purple-400' : 'bg-pink-300 hover:bg-pink-400'} w-2 h-2`
+              }`}
+              aria-label={`切换到第${index + 1}条情话${isCustom ? '（自定义）' : ''}`}
+            />
+          )
+        })}
       </div>
     </div>
   )

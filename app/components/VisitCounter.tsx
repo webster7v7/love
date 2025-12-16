@@ -47,23 +47,34 @@ export default function VisitCounter() {
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    // 延迟设置客户端状态，避免在effect中直接设置
     const timer = setTimeout(() => {
       setIsClient(true)
     }, 0)
     
-    // 异步记录访问和获取统计
+    // 优化：先显示缓存数据，再异步更新
     const initializeVisitTracking = async () => {
       try {
-        // 记录访问（全局统计）
-        await recordVisit()
+        // 先快速获取缓存的统计数据
+        const cachedStats = await getVisitStatsWithCache()
+        setStats(cachedStats)
         
-        // 获取最新统计数据
-        const stats = await getVisitStatsWithCache()
-        setStats(stats)
+        // 异步记录访问（不阻塞UI）
+        recordVisit().catch(error => {
+          console.error('Failed to record visit:', error)
+        })
+        
+        // 延迟获取最新统计（避免阻塞初始渲染）
+        setTimeout(async () => {
+          try {
+            const freshStats = await getVisitStatsWithCache()
+            setStats(freshStats)
+          } catch (error) {
+            console.error('Failed to refresh stats:', error)
+          }
+        }, 1000)
+        
       } catch (error) {
         console.error('Failed to initialize visit tracking:', error)
-        // 如果数据库失败，保持默认值
       }
     }
     

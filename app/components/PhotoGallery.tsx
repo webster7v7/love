@@ -3,61 +3,58 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
 import { FaPlus, FaTimes, FaImage } from 'react-icons/fa'
+import { 
+  createPhoto, 
+  getPhotos, 
+  deletePhoto as deletePhotoAction 
+} from '../actions/photos'
 
-interface Photo {
-  id: string
-  url: string
-  caption: string
-  createdAt: number
+import { LegacyPhoto } from '@/lib/types/database'
+
+type Photo = LegacyPhoto & {
+  isCustom: boolean
 }
 
-const STORAGE_KEY = 'love-photo-gallery'
 
-// 默认占位照片
-const DEFAULT_PHOTOS: Photo[] = [
-  {
-    id: 'default-1',
-    url: 'https://images.unsplash.com/photo-1518199266791-5375a83190b7?w=400&h=400&fit=crop',
-    caption: '添加你们的美好回忆 💕',
-    createdAt: Date.now() - 3000,
-  },
-  {
-    id: 'default-2',
-    url: 'https://images.unsplash.com/photo-1516589178581-6cd7833ae3b2?w=400&h=400&fit=crop',
-    caption: '记录每一个甜蜜瞬间 🌸',
-    createdAt: Date.now() - 2000,
-  },
-  {
-    id: 'default-3',
-    url: 'https://images.unsplash.com/photo-1522673607200-164d1b6ce486?w=400&h=400&fit=crop',
-    caption: '珍藏两人的温馨时光 ✨',
-    createdAt: Date.now() - 1000,
-  },
-]
 
 export default function PhotoGallery() {
-  const [photos, setPhotos] = useState<Photo[]>(DEFAULT_PHOTOS)
+  const [photos, setPhotos] = useState<Photo[]>([])
   const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null)
   const [showAddForm, setShowAddForm] = useState(false)
   const [newPhotoUrl, setNewPhotoUrl] = useState('')
   const [newPhotoCaption, setNewPhotoCaption] = useState('')
   const [isClient, setIsClient] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    // 使用 setTimeout 避免同步 setState
-    setTimeout(() => setIsClient(true), 0)
+  // 加载照片数据
+  const loadPhotos = async () => {
     try {
-      const stored = localStorage.getItem(STORAGE_KEY)
-      if (stored) {
-        const customPhotos: Photo[] = JSON.parse(stored)
-        setTimeout(() => setPhotos([...DEFAULT_PHOTOS, ...customPhotos]), 0)
+      const result = await getPhotos({ limit: 50 })
+      if (result.success && result.data) {
+        // 转换 LegacyPhoto 为 Photo，添加 isCustom 字段
+        const photos: Photo[] = result.data.map(photo => ({
+          ...photo,
+          isCustom: true, // 从数据库来的都是自定义照片
+        }))
+        setPhotos(photos)
       }
     } catch (error) {
       console.error('Failed to load photos:', error)
+    } finally {
+      setLoading(false)
     }
+  }
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsClient(true)
+      loadPhotos()
+    }, 0)
+    
+    return () => clearTimeout(timer)
   }, [])
 
-  const addPhoto = () => {
+  const addPhoto = async () => {
     const trimmedUrl = newPhotoUrl.trim()
     const trimmedCaption = newPhotoCaption.trim()
 
@@ -66,46 +63,58 @@ export default function PhotoGallery() {
       return
     }
 
-    const newPhoto: Photo = {
-      id: `custom-${Date.now()}`,
-      url: trimmedUrl,
-      caption: trimmedCaption || '美好回忆',
-      createdAt: Date.now(),
-    }
-
-    const updatedPhotos = [...photos, newPhoto]
-    setPhotos(updatedPhotos)
-
-    // 保存到 localStorage（只保存自定义照片）
-    const customPhotos = updatedPhotos.filter(p => p.id.startsWith('custom-'))
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(customPhotos))
-    } catch (error) {
-      console.error('Failed to save photo:', error)
-    }
+      const result = await createPhoto({
+        url: trimmedUrl,
+        caption: trimmedCaption || '美好回忆',
+        isCustom: true,
+      })
 
-    setNewPhotoUrl('')
-    setNewPhotoCaption('')
-    setShowAddForm(false)
+      if (result.success && result.data) {
+        const newPhoto: Photo = {
+          ...result.data,
+          isCustom: true,
+        }
+        setPhotos(prev => [...prev, newPhoto])
+        setNewPhotoUrl('')
+        setNewPhotoCaption('')
+        setShowAddForm(false)
+      } else {
+        alert('添加照片失败，请重试')
+      }
+    } catch (error) {
+      console.error('Failed to add photo:', error)
+      alert('添加照片失败，请重试')
+    }
   }
 
-  const deletePhoto = (id: string) => {
-    if (!id.startsWith('custom-')) return // 不能删除默认照片
+  const handleDeletePhoto = async (id: string, isCustom: boolean) => {
+    if (!isCustom) return // 不能删除默认照片
 
     if (!confirm('确定要删除这张照片吗？')) return
 
-    const updatedPhotos = photos.filter(p => p.id !== id)
-    setPhotos(updatedPhotos)
-
-    const customPhotos = updatedPhotos.filter(p => p.id.startsWith('custom-'))
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(customPhotos))
+      const result = await deletePhotoAction(id)
+      if (result.success) {
+        setPhotos(prev => prev.filter(p => p.id !== id))
+      } else {
+        alert('删除失败，请重试')
+      }
     } catch (error) {
       console.error('Failed to delete photo:', error)
+      alert('删除失败，请重试')
     }
   }
 
   if (!isClient) return null
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[200px]">
+        <div className="text-gray-400">加载照片中...</div>
+      </div>
+    )
+  }
 
   return (
     <div className="w-full max-w-6xl">
@@ -196,11 +205,11 @@ export default function PhotoGallery() {
                   {photo.caption}
                 </p>
               </div>
-              {photo.id.startsWith('custom-') && (
+              {photo.isCustom && (
                 <button
                   onClick={(e) => {
                     e.stopPropagation()
-                    deletePhoto(photo.id)
+                    handleDeletePhoto(photo.id, photo.isCustom)
                   }}
                   className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
                 >

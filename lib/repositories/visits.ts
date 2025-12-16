@@ -1,6 +1,6 @@
 import { getDb } from '../db/connection'
 import { visits, type NewVisit, type Visit } from '../db/schema'
-import { sql, desc, gte, and } from 'drizzle-orm'
+import { sql, desc, gte } from 'drizzle-orm'
 
 export interface VisitStats {
   daily: number
