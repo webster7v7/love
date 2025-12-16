@@ -12,6 +12,7 @@ import LoveQuotes from './components/LoveQuotes'
 import PhotoGallery from './components/PhotoGallery'
 import MessageBoard from './components/MessageBoard'
 import VisitCounter from './components/VisitCounter'
+import AdminPanel from './components/AdminPanel'
 
 import { nicknames } from './data/nicknames'
 
@@ -160,6 +161,11 @@ export default function Home() {
           <FaHeart className="text-pink-400" />
         </motion.div>
       </main>
+
+      {/* 管理员面板 */}
+      <ClientOnly>
+        <AdminPanel />
+      </ClientOnly>
     </div>
   )
 }

@@ -2,13 +2,15 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
-import { FaPlus, FaTimes, FaEdit, FaHeart } from 'react-icons/fa'
+import { FaPlus, FaTimes, FaEdit, FaHeart, FaLock } from 'react-icons/fa'
 import { 
   createMessage, 
   getMessages, 
   updateMessage, 
   deleteMessage as deleteMessageAction 
 } from '../actions/messages'
+import PasswordModal from './PasswordModal'
+import { useAuth } from '../hooks/useAuth'
 
 import { LegacyMessage } from '@/lib/types/database'
 
@@ -31,6 +33,10 @@ export default function MessageBoard() {
   const [editingContent, setEditingContent] = useState('')
   const [isClient, setIsClient] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  
+  const { isAuthenticated, login, extendSession } = useAuth()
 
   // 加载留言数据
   const loadMessages = async () => {
@@ -88,6 +94,16 @@ export default function MessageBoard() {
   }
 
   const handleDeleteMessage = async (id: string) => {
+    // 检查权限
+    if (!isAuthenticated) {
+      setPendingDeleteId(id)
+      setShowPasswordModal(true)
+      return
+    }
+
+    // 延长会话
+    extendSession()
+
     if (!confirm('确定要删除这条留言吗？')) return
 
     try {
@@ -101,6 +117,22 @@ export default function MessageBoard() {
       console.error('Failed to delete message:', error)
       alert('删除失败，请重试')
     }
+  }
+
+  const handlePasswordSuccess = () => {
+    login()
+    if (pendingDeleteId) {
+      // 延迟执行删除，让用户看到认证成功
+      setTimeout(() => {
+        handleDeleteMessage(pendingDeleteId)
+        setPendingDeleteId(null)
+      }, 300)
+    }
+  }
+
+  const handlePasswordModalClose = () => {
+    setShowPasswordModal(false)
+    setPendingDeleteId(null)
   }
 
   const startEditing = (message: Message) => {
@@ -283,10 +315,10 @@ export default function MessageBoard() {
                       </button>
                       <button
                         onClick={() => handleDeleteMessage(message.id)}
-                        className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
-                        title="删除"
+                        className="bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors relative group"
+                        title={isAuthenticated ? "删除" : "删除 (需要权限)"}
                       >
-                        <FaTimes size={12} />
+                        {isAuthenticated ? <FaTimes size={12} /> : <FaLock size={12} />}
                       </button>
                     </div>
                   )}
@@ -296,6 +328,15 @@ export default function MessageBoard() {
           </div>
         )}
       </motion.div>
+
+      {/* 权限验证模态框 */}
+      <PasswordModal
+        isOpen={showPasswordModal}
+        onClose={handlePasswordModalClose}
+        onSuccess={handlePasswordSuccess}
+        title="删除权限验证"
+        message="删除留言需要管理员权限，请输入密码"
+      />
     </div>
   )
 }

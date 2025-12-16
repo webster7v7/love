@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect, useMemo } from 'react'
-import { FaHeart, FaPlus, FaTrash, FaTimes } from 'react-icons/fa'
+import { FaHeart, FaPlus, FaTrash, FaTimes, FaLock } from 'react-icons/fa'
 import { loveQuotes } from '../data/loveQuotes'
 import { getRandomNickname } from '../data/nicknames'
 import { 
@@ -10,6 +10,8 @@ import {
   getQuotes, 
   deleteQuote as deleteQuoteAction 
 } from '../actions/quotes'
+import PasswordModal from './PasswordModal'
+import { useAuth } from '../hooks/useAuth'
 import { LegacyQuote } from '@/lib/types/database'
 
 type Quote = LegacyQuote
@@ -21,6 +23,10 @@ export default function LoveQuotes() {
   const [newQuoteText, setNewQuoteText] = useState('')
   const [isClient, setIsClient] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  
+  const { isAuthenticated, login, extendSession } = useAuth()
 
   // 加载情话数据
   const loadQuotes = async () => {
@@ -112,6 +118,16 @@ export default function LoveQuotes() {
     // 不能删除预设情话
     if (id.startsWith('default-')) return
     
+    // 检查权限
+    if (!isAuthenticated) {
+      setPendingDeleteId(id)
+      setShowPasswordModal(true)
+      return
+    }
+
+    // 延长会话
+    extendSession()
+    
     if (!confirm('确定要删除这条情话吗？')) return
 
     try {
@@ -131,6 +147,22 @@ export default function LoveQuotes() {
       console.error('Failed to delete quote:', error)
       alert('删除失败，请重试')
     }
+  }
+
+  const handlePasswordSuccess = () => {
+    login()
+    if (pendingDeleteId) {
+      // 延迟执行删除，让用户看到认证成功
+      setTimeout(() => {
+        handleDeleteQuote(pendingDeleteId)
+        setPendingDeleteId(null)
+      }, 300)
+    }
+  }
+
+  const handlePasswordModalClose = () => {
+    setShowPasswordModal(false)
+    setPendingDeleteId(null)
   }
 
   const customQuoteCount = quotes.filter(q => !q.id.startsWith('default-')).length
@@ -246,9 +278,10 @@ export default function LoveQuotes() {
                 className="text-red-400 hover:text-red-600 transition-colors flex items-center gap-2 text-sm"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
+                title={isAuthenticated ? "删除这条情话" : "删除情话 (需要权限)"}
               >
-                <FaTrash />
-                删除这条情话
+                {isAuthenticated ? <FaTrash /> : <FaLock />}
+                {isAuthenticated ? '删除这条情话' : '删除需要权限'}
               </motion.button>
             )}
           </motion.div>
@@ -273,6 +306,15 @@ export default function LoveQuotes() {
           )
         })}
       </div>
+
+      {/* 权限验证模态框 */}
+      <PasswordModal
+        isOpen={showPasswordModal}
+        onClose={handlePasswordModalClose}
+        onSuccess={handlePasswordSuccess}
+        title="删除权限验证"
+        message="删除情话需要管理员权限，请输入密码"
+      />
     </div>
   )
 }

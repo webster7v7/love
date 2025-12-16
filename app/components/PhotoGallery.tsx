@@ -2,12 +2,14 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { useState, useEffect } from 'react'
-import { FaPlus, FaTimes, FaImage } from 'react-icons/fa'
+import { FaPlus, FaTimes, FaImage, FaLock } from 'react-icons/fa'
 import { 
   createPhoto, 
   getPhotos, 
   deletePhoto as deletePhotoAction 
 } from '../actions/photos'
+import PasswordModal from './PasswordModal'
+import { useAuth } from '../hooks/useAuth'
 
 import { LegacyPhoto } from '@/lib/types/database'
 
@@ -25,6 +27,10 @@ export default function PhotoGallery() {
   const [newPhotoCaption, setNewPhotoCaption] = useState('')
   const [isClient, setIsClient] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [showPasswordModal, setShowPasswordModal] = useState(false)
+  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null)
+  
+  const { isAuthenticated, login, extendSession } = useAuth()
 
   // 加载照片数据
   const loadPhotos = async () => {
@@ -91,6 +97,16 @@ export default function PhotoGallery() {
   const handleDeletePhoto = async (id: string, isCustom: boolean) => {
     if (!isCustom) return // 不能删除默认照片
 
+    // 检查权限
+    if (!isAuthenticated) {
+      setPendingDeleteId(id)
+      setShowPasswordModal(true)
+      return
+    }
+
+    // 延长会话
+    extendSession()
+
     if (!confirm('确定要删除这张照片吗？')) return
 
     try {
@@ -104,6 +120,25 @@ export default function PhotoGallery() {
       console.error('Failed to delete photo:', error)
       alert('删除失败，请重试')
     }
+  }
+
+  const handlePasswordSuccess = () => {
+    login()
+    if (pendingDeleteId) {
+      const photo = photos.find(p => p.id === pendingDeleteId)
+      if (photo) {
+        // 延迟执行删除，让用户看到认证成功
+        setTimeout(() => {
+          handleDeletePhoto(pendingDeleteId, photo.isCustom)
+          setPendingDeleteId(null)
+        }, 300)
+      }
+    }
+  }
+
+  const handlePasswordModalClose = () => {
+    setShowPasswordModal(false)
+    setPendingDeleteId(null)
   }
 
   if (!isClient) return null
@@ -212,8 +247,9 @@ export default function PhotoGallery() {
                     handleDeletePhoto(photo.id, photo.isCustom)
                   }}
                   className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                  title={isAuthenticated ? "删除照片" : "删除照片 (需要权限)"}
                 >
-                  <FaTimes size={12} />
+                  {isAuthenticated ? <FaTimes size={12} /> : <FaLock size={12} />}
                 </button>
               )}
             </motion.div>
@@ -256,6 +292,15 @@ export default function PhotoGallery() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* 权限验证模态框 */}
+      <PasswordModal
+        isOpen={showPasswordModal}
+        onClose={handlePasswordModalClose}
+        onSuccess={handlePasswordSuccess}
+        title="删除权限验证"
+        message="删除照片需要管理员权限，请输入密码"
+      />
     </div>
   )
 }
