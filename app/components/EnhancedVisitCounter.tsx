@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaEye, FaSync, FaWifi, FaWifiSlash, FaArrowUp } from 'react-icons/fa'
+import { FaEye, FaSync, FaWifi, FaExclamationTriangle, FaArrowUp } from 'react-icons/fa'
 import { useRealTimeVisitStats } from '../hooks/useRealTimeVisitStats'
 
 interface StatCardProps {
@@ -118,7 +118,7 @@ export default function EnhancedVisitCounter() {
             {isOnline ? (
               <FaWifi className="text-green-500" />
             ) : (
-              <FaWifiSlash className="text-red-500" />
+              <FaExclamationTriangle className="text-red-500" />
             )}
             <span className={isOnline ? 'text-green-600' : 'text-red-600'}>
               {isOnline ? '在线' : '离线'}

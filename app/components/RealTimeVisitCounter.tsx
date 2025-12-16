@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { FaEye, FaSync, FaWifi, FaWifiSlash } from 'react-icons/fa'
+import { FaEye, FaSync, FaWifi, FaExclamationTriangle } from 'react-icons/fa'
 import { recordVisit, getVisitStatsWithCache } from '../actions/visits'
 
 interface VisitStats {
@@ -229,7 +229,7 @@ export default function RealTimeVisitCounter() {
             {isOnline ? (
               <FaWifi className="text-green-500" />
             ) : (
-              <FaWifiSlash className="text-red-500" />
+              <FaExclamationTriangle className="text-red-500" />
             )}
             <span className={isOnline ? 'text-green-600' : 'text-red-600'}>
               {isOnline ? '在线' : '离线'}
