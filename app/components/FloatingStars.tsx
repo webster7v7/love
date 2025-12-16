@@ -16,21 +16,30 @@ interface Star {
 
 export default function FloatingStars() {
   const [stars, setStars] = useState<Star[]>([])
+  const [isClient, setIsClient] = useState(false)
 
-  // 只在客户端生成随机星星配置，避免SSR hydration mismatch
   useEffect(() => {
-    setStars(
-      Array.from({ length: 15 }, (_, i) => ({
-        id: i,
-        left: `${Math.random() * 100}%`,
-        size: Math.random() * 15 + 15, // 15-30px
-        duration: Math.random() * 6 + 6, // 6-12秒
-        delay: Math.random() * 6, // 0-6秒延迟
-        opacity: Math.random() * 0.4 + 0.3, // 0.3-0.7透明度
-        rotation: Math.random() * 360, // 随机初始旋转
-      }))
-    )
+    // 确保只在客户端运行
+    setIsClient(true)
+    
+    // 生成随机星星配置
+    const newStars = Array.from({ length: 15 }, (_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      size: Math.random() * 15 + 15, // 15-30px
+      duration: Math.random() * 6 + 6, // 6-12秒
+      delay: Math.random() * 6, // 0-6秒延迟
+      opacity: Math.random() * 0.4 + 0.3, // 0.3-0.7透明度
+      rotation: Math.random() * 360, // 随机初始旋转
+    }))
+    
+    setStars(newStars)
   }, [])
+
+  // 在服务端或客户端初始化之前不渲染任何内容
+  if (!isClient) {
+    return <div className="fixed inset-0 pointer-events-none overflow-hidden z-0" />
+  }
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">

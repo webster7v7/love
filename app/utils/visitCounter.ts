@@ -136,7 +136,7 @@ export function getVisitStats(): VisitStats {
       }
     }
 
-    const now = Date.now()
+    // const now = Date.now() // 暂时不需要
     const todayStart = getTodayStart()
     const weekStart = getWeekStart()
     const monthStart = getMonthStart()

@@ -24,7 +24,8 @@ export default function LoveQuotes() {
 
   // 加载情话（预设 + 自定义）
   useEffect(() => {
-    setIsClient(true)
+    // 使用 setTimeout 避免同步 setState
+    setTimeout(() => setIsClient(true), 0)
     
     // 将预设情话（520条）转换为 Quote 对象
     const defaultQuoteObjects: Quote[] = loveQuotes.map((text, index) => ({
@@ -39,13 +40,13 @@ export default function LoveQuotes() {
       const stored = localStorage.getItem(STORAGE_KEY)
       if (stored) {
         const customQuotes: Quote[] = JSON.parse(stored)
-        setQuotes([...defaultQuoteObjects, ...customQuotes])
+        setTimeout(() => setQuotes([...defaultQuoteObjects, ...customQuotes]), 0)
       } else {
-        setQuotes(defaultQuoteObjects)
+        setTimeout(() => setQuotes(defaultQuoteObjects), 0)
       }
     } catch (error) {
       console.error('Failed to load custom quotes:', error)
-      setQuotes(defaultQuoteObjects)
+      setTimeout(() => setQuotes(defaultQuoteObjects), 0)
     }
   }, [])
 
@@ -125,7 +126,7 @@ export default function LoveQuotes() {
     if (!currentQuote) return ''
     const randomNickname = getRandomNickname()
     return currentQuote.text.replace(/\{nickname\}/g, randomNickname)
-  }, [currentIndex, currentQuote])
+  }, [currentQuote])
 
   if (!isClient || quotes.length === 0) {
     return (

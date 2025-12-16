@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1765808493844,
+      "tag": "0000_daffy_susan_delgado",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1765809374612,
+      "tag": "0001_purple_kingpin",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1765883030591,
+      "tag": "0002_watery_ben_grimm",
+      "breakpoints": true
+    }
+  ]
+}

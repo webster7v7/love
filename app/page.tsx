@@ -6,6 +6,7 @@ import { FaHeart } from 'react-icons/fa'
 import FloatingHearts from './components/FloatingHearts'
 import FloatingStars from './components/FloatingStars'
 import MouseParticles from './components/MouseParticles'
+import ClientOnly from './components/ClientOnly'
 import CountdownTimer from './components/CountdownTimer'
 import LoveQuotes from './components/LoveQuotes'
 import PhotoGallery from './components/PhotoGallery'
@@ -24,14 +25,16 @@ export default function Home() {
     }, 3000) // 每3秒切换一次
 
     return () => clearInterval(interval)
-  }, [nicknames.length])
+  }, [])
 
   return (
     <div className="relative min-h-screen">
       {/* 背景特效层 */}
-      <FloatingHearts />
-      <FloatingStars />
-      <MouseParticles />
+      <ClientOnly>
+        <FloatingHearts />
+        <FloatingStars />
+        <MouseParticles />
+      </ClientOnly>
 
       {/* 主要内容 */}
       <main className="relative z-10 flex flex-col items-center justify-start px-4 py-12 md:py-20 gap-16 md:gap-24">

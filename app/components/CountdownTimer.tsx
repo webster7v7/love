@@ -114,7 +114,12 @@ export default function CountdownTimer() {
     seconds: 0,
   })
 
+  const [isClient, setIsClient] = useState(false)
+
   useEffect(() => {
+    // 确保只在客户端运行
+    setIsClient(true)
+    
     const calculateTime = () => {
       const now = new Date().getTime()
       const diff = now - START_DATE
@@ -137,6 +142,27 @@ export default function CountdownTimer() {
 
     return () => clearInterval(interval)
   }, [])
+
+  // 在服务端或客户端初始化之前显示占位符
+  if (!isClient) {
+    return (
+      <div className="flex flex-wrap justify-center gap-4 md:gap-6">
+        {['天', '小时', '分钟', '秒'].map((label, index) => (
+          <div
+            key={label}
+            className="glass-card rounded-2xl p-6 min-w-[100px] flex flex-col items-center justify-center"
+          >
+            <div className="text-4xl md:text-5xl font-bold mb-2 min-h-[3rem] flex items-center justify-center gradient-text">
+              00
+            </div>
+            <div className="text-sm md:text-base text-gray-600 font-medium">
+              {label}
+            </div>
+          </div>
+        ))}
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col items-center gap-8">

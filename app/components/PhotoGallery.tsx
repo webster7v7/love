@@ -44,12 +44,13 @@ export default function PhotoGallery() {
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    setIsClient(true)
+    // 使用 setTimeout 避免同步 setState
+    setTimeout(() => setIsClient(true), 0)
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
       if (stored) {
         const customPhotos: Photo[] = JSON.parse(stored)
-        setPhotos([...DEFAULT_PHOTOS, ...customPhotos])
+        setTimeout(() => setPhotos([...DEFAULT_PHOTOS, ...customPhotos]), 0)
       }
     } catch (error) {
       console.error('Failed to load photos:', error)

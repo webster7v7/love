@@ -32,12 +32,13 @@ export default function MessageBoard() {
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    setIsClient(true)
+    // 使用 setTimeout 避免同步 setState
+    setTimeout(() => setIsClient(true), 0)
     try {
       const stored = localStorage.getItem(STORAGE_KEY)
       if (stored) {
         const loadedMessages: Message[] = JSON.parse(stored)
-        setMessages(loadedMessages)
+        setTimeout(() => setMessages(loadedMessages), 0)
       }
     } catch (error) {
       console.error('Failed to load messages:', error)

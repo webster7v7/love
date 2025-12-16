@@ -15,20 +15,29 @@ interface Heart {
 
 export default function FloatingHearts() {
   const [hearts, setHearts] = useState<Heart[]>([])
+  const [isClient, setIsClient] = useState(false)
 
-  // 只在客户端生成随机爱心配置，避免SSR hydration mismatch
   useEffect(() => {
-    setHearts(
-      Array.from({ length: 20 }, (_, i) => ({
-        id: i,
-        left: `${Math.random() * 100}%`,
-        size: Math.random() * 20 + 20, // 20-40px
-        duration: Math.random() * 5 + 5, // 5-10秒
-        delay: Math.random() * 5, // 0-5秒延迟
-        opacity: Math.random() * 0.3 + 0.3, // 0.3-0.6透明度
-      }))
-    )
+    // 确保只在客户端运行
+    setIsClient(true)
+    
+    // 生成随机爱心配置
+    const newHearts = Array.from({ length: 20 }, (_, i) => ({
+      id: i,
+      left: `${Math.random() * 100}%`,
+      size: Math.random() * 20 + 20, // 20-40px
+      duration: Math.random() * 5 + 5, // 5-10秒
+      delay: Math.random() * 5, // 0-5秒延迟
+      opacity: Math.random() * 0.3 + 0.3, // 0.3-0.6透明度
+    }))
+    
+    setHearts(newHearts)
   }, [])
+
+  // 在服务端或客户端初始化之前不渲染任何内容
+  if (!isClient) {
+    return <div className="fixed inset-0 pointer-events-none overflow-hidden z-0" />
+  }
 
   return (
     <div className="fixed inset-0 pointer-events-none overflow-hidden z-0">

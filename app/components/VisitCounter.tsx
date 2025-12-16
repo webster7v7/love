@@ -3,7 +3,14 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { FaEye } from 'react-icons/fa'
-import { recordVisit, getVisitStats, VisitStats } from '../utils/visitCounter'
+import { recordVisit, getVisitStatsWithCache } from '../actions/visits'
+
+interface VisitStats {
+  daily: number
+  weekly: number
+  monthly: number
+  total: number
+}
 
 interface StatCardProps {
   label: string
@@ -40,13 +47,29 @@ export default function VisitCounter() {
   const [isClient, setIsClient] = useState(false)
 
   useEffect(() => {
-    setIsClient(true)
+    // 延迟设置客户端状态，避免在effect中直接设置
+    const timer = setTimeout(() => {
+      setIsClient(true)
+    }, 0)
     
-    // 记录访问
-    recordVisit()
+    // 异步记录访问和获取统计
+    const initializeVisitTracking = async () => {
+      try {
+        // 记录访问（全局统计）
+        await recordVisit()
+        
+        // 获取最新统计数据
+        const stats = await getVisitStatsWithCache()
+        setStats(stats)
+      } catch (error) {
+        console.error('Failed to initialize visit tracking:', error)
+        // 如果数据库失败，保持默认值
+      }
+    }
     
-    // 更新统计
-    setStats(getVisitStats())
+    initializeVisitTracking()
+    
+    return () => clearTimeout(timer)
   }, [])
 
   if (!isClient) {
