@@ -145,7 +145,7 @@ export async function getVisitStatsWithCache(): Promise<VisitStats> {
         total: 0,
       }
     },
-    10000 // 10秒缓存，实时更新需要更短的缓存时间
+    2000 // 2秒缓存，实现更快的实时更新
   )
 }
 

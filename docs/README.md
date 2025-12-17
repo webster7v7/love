@@ -27,6 +27,7 @@
 - **[VISIT-STATISTICS-UPGRADE.md](./VISIT-STATISTICS-UPGRADE.md)** - 访问统计功能升级
 - **[VISIT-STATS-FIX-REPORT.md](./VISIT-STATS-FIX-REPORT.md)** - 访问统计数据准确性修复
 - **[FINAL-VISIT-STATS-COMPLETION.md](./FINAL-VISIT-STATS-COMPLETION.md)** - 访问统计修复最终完成报告
+- **[REALTIME-VISIT-STATS-FINAL-FIX.md](./REALTIME-VISIT-STATS-FINAL-FIX.md)** - 实时访问统计最终修复报告
 
 ### 📖 使用指南
 - **[../README.md](../README.md)** - 项目主文档和快速开始

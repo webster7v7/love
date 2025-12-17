@@ -35,22 +35,27 @@ export async function recordClientVisit(): Promise<{
 
 /**
  * 检查是否需要记录访问
+ * 修改为每次访问都记录，实现真正的实时统计
  */
 export function shouldRecordVisit(): boolean {
   if (typeof window === 'undefined') return false
   
-  // 检查是否已经记录过今天的访问
-  const lastRecordKey = 'last-visit-record'
-  const today = new Date().toDateString()
+  // 检查是否在短时间内重复访问（防止过度频繁的请求）
+  const lastRecordKey = 'last-visit-timestamp'
+  const now = Date.now()
   
   try {
     const lastRecord = localStorage.getItem(lastRecordKey)
-    if (lastRecord === today) {
-      return false // 今天已经记录过
+    if (lastRecord) {
+      const lastTime = parseInt(lastRecord)
+      // 如果距离上次记录少于30秒，则不重复记录
+      if (now - lastTime < 30000) {
+        return false
+      }
     }
     
     // 更新记录时间
-    localStorage.setItem(lastRecordKey, today)
+    localStorage.setItem(lastRecordKey, now.toString())
     return true
   } catch {
     return true // 如果localStorage不可用，默认记录

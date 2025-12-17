@@ -31,7 +31,7 @@ export function useRealTimeVisitStats(
   options: UseRealTimeVisitStatsOptions = {}
 ): UseRealTimeVisitStatsReturn {
   const {
-    updateInterval = 10000, // 默认10秒
+    updateInterval = 3000, // 默认3秒，更快的实时更新
     enableRealTime = true,
     recordVisitOnMount = true
   } = options
@@ -96,7 +96,7 @@ export function useRealTimeVisitStats(
   const recordUserVisit = useCallback(async () => {
     if (hasRecordedVisit.current || !recordVisitOnMount) return
 
-    // 检查是否需要记录访问
+    // 检查是否需要记录访问（30秒防重复）
     if (!shouldRecordVisit()) {
       hasRecordedVisit.current = true
       return
@@ -106,13 +106,13 @@ export function useRealTimeVisitStats(
       const result = await recordClientVisit()
       hasRecordedVisit.current = true
       
-      // 只有成功记录新访问时才刷新统计
-      if (result.success && result.isNewSession) {
+      // 每次成功记录访问都立即刷新统计
+      if (result.success) {
         setTimeout(() => {
           if (isMountedRef.current) {
             forceRefresh()
           }
-        }, 1500)
+        }, 500) // 缩短延迟时间，更快显示更新
       }
     } catch (error) {
       console.error('Failed to record visit:', error)

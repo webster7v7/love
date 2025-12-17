@@ -89,7 +89,7 @@ export default function EnhancedVisitCounter() {
     refresh,
     forceRefresh
   } = useRealTimeVisitStats({
-    updateInterval: 10000, // 10秒更新
+    updateInterval: 3000, // 3秒更新，更快响应
     enableRealTime: true,
     recordVisitOnMount: true
   })
@@ -111,46 +111,14 @@ export default function EnhancedVisitCounter() {
           <FaEye className="text-2xl text-pink-500" />
         </div>
 
-        {/* 状态和控制栏 */}
-        <div className="flex flex-wrap items-center justify-center gap-4 text-sm">
-          {/* 网络状态 */}
-          <div className="flex items-center gap-2">
-            {isOnline ? (
-              <FaWifi className="text-green-500" />
-            ) : (
-              <FaExclamationTriangle className="text-red-500" />
-            )}
-            <span className={isOnline ? 'text-green-600' : 'text-red-600'}>
-              {isOnline ? '在线' : '离线'}
-            </span>
-          </div>
-
-          {/* 刷新按钮 */}
-          <button
-            onClick={() => refresh()}
-            disabled={isLoading}
-            className="flex items-center gap-2 px-3 py-1 rounded-full bg-blue-100 hover:bg-blue-200 transition-colors disabled:opacity-50"
-            title="刷新数据"
-          >
-            <FaSync className={`text-xs ${isLoading ? 'animate-spin' : ''}`} />
-            <span>刷新</span>
-          </button>
-
-          {/* 强制刷新按钮 */}
-          <button
-            onClick={() => forceRefresh()}
-            disabled={isLoading}
-            className="flex items-center gap-2 px-3 py-1 rounded-full bg-green-100 hover:bg-green-200 transition-colors disabled:opacity-50"
-            title="强制刷新（绕过缓存）"
-          >
-            <FaSync className={`text-xs ${isLoading ? 'animate-spin' : ''}`} />
-            <span>实时</span>
-          </button>
-
-          {/* 最后更新时间 */}
+        {/* 最后更新时间 */}
+        <div className="flex items-center justify-center">
           {lastUpdate && (
-            <span className="text-gray-500">
-              {lastUpdate.toLocaleTimeString()}
+            <span className="text-gray-500 text-sm">
+              北京时间 {lastUpdate.toLocaleTimeString('zh-CN', { 
+                timeZone: 'Asia/Shanghai',
+                hour12: false 
+              })}
             </span>
           )}
         </div>
@@ -190,21 +158,13 @@ export default function EnhancedVisitCounter() {
 
       {/* 实时更新提示 */}
       <motion.div
-        className="flex flex-col items-center gap-2 text-xs text-gray-400"
+        className="flex items-center gap-2 text-xs text-gray-400"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ delay: 1 }}
       >
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-          <span>每10秒自动更新</span>
-        </div>
-        
-        <div className="text-center">
-          <div>• 页面切换时自动刷新</div>
-          <div>• 网络恢复时自动同步</div>
-          <div>• 数据变化时显示动画</div>
-        </div>
+        <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+        <span>实时访问统计 - 每3秒自动更新</span>
       </motion.div>
     </motion.section>
   )

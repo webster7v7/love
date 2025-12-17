@@ -20,34 +20,10 @@ export class SessionManager {
 
   /**
    * 获取或创建会话ID
+   * 修改为每次都生成新的会话ID，实现真正的访问统计
    */
   getSessionId(): string {
-    if (this.sessionId) {
-      return this.sessionId
-    }
-
-    // 尝试从localStorage恢复
-    if (typeof window !== 'undefined') {
-      try {
-        const stored = localStorage.getItem(this.STORAGE_KEY)
-        if (stored) {
-          const { sessionId, timestamp } = JSON.parse(stored)
-          
-          // 检查是否过期（24小时）
-          if (Date.now() - timestamp < this.SESSION_DURATION) {
-            this.sessionId = sessionId
-            return sessionId
-          } else {
-            // 过期，删除旧会话
-            localStorage.removeItem(this.STORAGE_KEY)
-          }
-        }
-      } catch (error) {
-        console.warn('Failed to restore session from localStorage:', error)
-      }
-    }
-
-    // 生成新会话ID
+    // 每次都生成新的会话ID
     this.sessionId = this.generateNewSessionId()
     this.saveSession()
     
@@ -56,22 +32,22 @@ export class SessionManager {
 
   /**
    * 生成新的会话ID
+   * 修改为每次访问都生成新ID，实现真正的访问统计
    */
   private generateNewSessionId(): string {
     if (typeof window === 'undefined') {
       // 服务端环境
-      const today = new Date().toDateString()
-      return this.hash(`server-${today}-${Math.random()}`)
+      return this.hash(`server-${Date.now()}-${Math.random()}`)
     }
 
-    // 客户端环境 - 基于浏览器指纹
+    // 客户端环境 - 每次访问生成新的唯一ID
     const fingerprint = [
       navigator.userAgent || '',
       navigator.language || '',
       screen.width + 'x' + screen.height,
       navigator.platform || '',
-      new Date().toDateString(), // 每天更新
-      Math.random().toString(36) // 添加随机性避免冲突
+      Date.now(), // 使用时间戳确保唯一性
+      Math.random().toString(36) // 添加随机性
     ].join('|')
 
     return this.hash(fingerprint)
